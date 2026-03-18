@@ -1,0 +1,2863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>开车了 // AI派对</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050010;--bg2:#0a0020;
+  --np:#ff0099;--ng:#00ffcc;--nc:#7b2fff;--nv:#ff6600;--no:#ffdd00;
+  --txt:#e8d5ff;--muted:#5a4a7a;
+  --gp:rgba(255,0,153,0.4);--gg:rgba(0,255,204,0.35);--gc:rgba(123,47,255,0.35);
+  --red:#ff3333;--blk:#aaaaaa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif;cursor:default;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 3px);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 85%,rgba(255,0,153,0.15) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 45% at 85% 10%,rgba(0,255,204,0.12) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 60% at 50% 50%,rgba(10,0,32,1) 0%,rgba(5,0,16,1) 100%);}
+
+/* ── SCREENS ── */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;width:100%;}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-bottom:3rem;}
+
+/* ── FONTS ── */
+.orb{font-family:'Orbitron',sans-serif;}
+.mono{font-family:'Share Tech Mono',monospace;}
+
+/* ── PANEL ── */
+.panel{background:linear-gradient(145deg,rgba(10,0,35,0.95),rgba(5,0,20,0.98));
+  border:1px solid rgba(255,0,153,0.2);border-radius:12px;backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04),0 0 40px rgba(255,0,153,0.05);}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:8px;cursor:pointer;transition:all 0.18s;
+  font-family:'Orbitron',sans-serif;letter-spacing:0.08em;font-weight:700;}
+.btn:active{transform:scale(0.96);}
+.btn-primary{background:linear-gradient(135deg,rgba(255,0,153,0.2),rgba(255,0,153,0.08));
+  border:1.5px solid var(--np);color:var(--np);font-size:1rem;padding:0.9rem 1.5rem;width:100%;
+  box-shadow:0 0 22px var(--gp);text-transform:uppercase;}
+.btn-primary:hover{box-shadow:0 0 45px var(--gp);}
+.btn-teal{background:linear-gradient(135deg,rgba(0,255,204,0.15),rgba(0,255,204,0.06));
+  border:1.5px solid var(--ng);color:var(--ng);font-size:0.9rem;padding:0.8rem 1.5rem;width:100%;
+  box-shadow:0 0 16px var(--gg);text-transform:uppercase;}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--muted);
+  font-size:0.78rem;padding:0.65rem 1.1rem;font-family:'Share Tech Mono',monospace;
+  letter-spacing:0.12em;text-transform:uppercase;}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.3);color:var(--txt);}
+.btn-sm{font-size:0.75rem;padding:0.5rem 0.9rem;border-radius:6px;}
+
+/* ── INPUT ── */
+.neo-input{width:100%;background:rgba(255,0,153,0.04);border:1px solid rgba(255,0,153,0.2);
+  border-radius:8px;padding:0.85rem 1rem;color:var(--txt);font-family:'Noto Sans SC',sans-serif;
+  font-size:1rem;outline:none;transition:all 0.3s;margin-bottom:0.8rem;}
+.neo-input::placeholder{color:var(--muted);}
+.neo-input:focus{border-color:var(--np);box-shadow:0 0 20px rgba(255,0,153,0.15);}
+.field-lbl{display:block;font-family:'Share Tech Mono',monospace;font-size:0.6rem;
+  letter-spacing:0.25em;text-transform:uppercase;color:var(--ng);margin-bottom:0.3rem;}
+
+/* ── SECTION LABEL ── */
+.slbl{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--nc);opacity:0.7;margin-bottom:0.35rem;}
+
+/* ════════════════════
+   AUTH SCREENS
+════════════════════ */
+#auth{justify-content:center;padding:1.5rem;animation:fadeUp 0.7s ease;}
+.auth-hero{text-align:center;margin-bottom:2rem;}
+.auth-badge{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:0.6rem;
+  letter-spacing:0.3em;color:var(--ng);border:1px solid rgba(0,255,204,0.3);
+  border-radius:4px;padding:0.25rem 0.8rem;margin-bottom:0.8rem;animation:blink 1.5s step-end infinite;}
+.auth-title{font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(2.5rem,13vw,5.5rem);line-height:0.95;letter-spacing:0.08em;
+  background:linear-gradient(135deg,var(--np) 0%,#ff66cc 30%,var(--ng) 60%,#66ffee 80%,var(--np) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 28px rgba(255,0,153,0.5));
+  animation:shimmer 4s linear infinite;}
+@keyframes shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+.auth-sub{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.22em;
+  color:var(--ng);opacity:0.6;margin-top:0.3rem;}
+.auth-tabs{display:flex;gap:0.4rem;margin-bottom:1.2rem;}
+.auth-tab{flex:1;padding:0.6rem;text-align:center;border-radius:8px;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:0.08em;
+  border:1px solid rgba(255,255,255,0.1);color:var(--muted);transition:all 0.2s;}
+.auth-tab.on{border-color:var(--np);color:var(--np);background:rgba(255,0,153,0.1);}
+
+/* Avatar picker */
+.av-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0.5rem;margin-bottom:0.8rem;}
+.av-opt{font-size:1.8rem;text-align:center;padding:0.5rem;border-radius:10px;cursor:pointer;
+  border:2px solid transparent;transition:all 0.18s;background:rgba(255,255,255,0.03);}
+.av-opt:hover{border-color:rgba(255,0,153,0.3);background:rgba(255,0,153,0.06);}
+.av-opt.on{border-color:var(--np);background:rgba(255,0,153,0.15);
+  box-shadow:0 0 14px rgba(255,0,153,0.3);transform:scale(1.08);}
+
+/* Gender buttons */
+.gender-btns{display:flex;gap:0.5rem;margin-bottom:0.8rem;}
+.gender-btn{flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+  color:var(--muted);text-align:center;cursor:pointer;font-size:0.9rem;transition:all 0.2s;}
+.gender-btn.on{border-color:var(--ng);color:var(--ng);background:rgba(0,255,204,0.08);}
+
+/* ════════════════════
+   ROOM SELECT
+════════════════════ */
+#roomSelect{padding:1.2rem;gap:0.7rem;}
+.rs-header{width:100%;max-width:480px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 0.2rem;}
+.rs-user{display:flex;align-items:center;gap:0.6rem;}
+.rs-av{font-size:1.8rem;}
+.rs-name{font-family:'Orbitron',sans-serif;font-size:0.85rem;color:var(--ng);}
+.room-card{width:100%;max-width:480px;padding:1rem;border-radius:12px;cursor:pointer;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);
+  transition:all 0.2s;display:flex;align-items:center;gap:0.9rem;}
+.room-card:hover{border-color:rgba(255,0,153,0.35);background:rgba(255,0,153,0.05);}
+.room-card .rc-icon{font-size:1.6rem;flex-shrink:0;}
+.room-card .rc-name{font-weight:700;font-size:1rem;}
+.room-card .rc-meta{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);margin-top:0.2rem;}
+.room-card .rc-badge{font-family:'Share Tech Mono',monospace;font-size:0.6rem;
+  padding:0.2rem 0.5rem;border-radius:4px;margin-left:auto;flex-shrink:0;}
+.rc-badge.pub{border:1px solid rgba(0,255,204,0.3);color:var(--ng);}
+.rc-badge.priv{border:1px solid rgba(255,0,153,0.3);color:var(--np);}
+
+/* Create room modal */
+.modal-overlay{position:fixed;inset:0;z-index:600;background:rgba(5,0,16,0.92);
+  backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.show{display:flex;animation:blastIn 0.25s ease;}
+.modal-box{width:100%;max-width:400px;padding:1.5rem;border-radius:14px;
+  background:linear-gradient(145deg,rgba(12,0,40,0.97),rgba(6,0,22,0.99));
+  border:1px solid rgba(255,0,153,0.25);}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--ng);
+  margin-bottom:1.2rem;letter-spacing:0.1em;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:0.8rem;padding:0.6rem 0;}
+.toggle-lbl{font-size:0.9rem;color:var(--txt);}
+.toggle{width:44px;height:24px;border-radius:12px;background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.15);cursor:pointer;position:relative;transition:all 0.3s;}
+.toggle.on{background:rgba(0,255,204,0.2);border-color:var(--ng);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:8px;background:#888;transition:all 0.3s;}
+.toggle.on::after{left:23px;background:var(--ng);}
+
+/* ════════════════════
+   LOBBY
+════════════════════ */
+#lobby{padding:0.9rem;gap:0.6rem;}
+.lobby-top{width:100%;max-width:540px;}
+.lob-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.5rem;
+  color:var(--ng);letter-spacing:0.1em;}
+.room-pill{display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;
+  background:rgba(0,255,204,0.07);border:1px solid rgba(0,255,204,0.25);
+  border-radius:6px;padding:0.25rem 0.7rem;
+  font-family:'Share Tech Mono',monospace;font-size:0.78rem;color:var(--ng);letter-spacing:0.18em;
+  transition:all 0.2s;}
+.room-pill:hover{background:rgba(0,255,204,0.14);}
+.players-wrap{display:flex;flex-wrap:wrap;gap:0.45rem;justify-content:flex-start;width:100%;max-width:540px;}
+.p-chip{display:flex;align-items:center;gap:0.35rem;
+  background:rgba(255,0,153,0.06);border:1px solid rgba(255,0,153,0.18);
+  border-radius:20px;padding:0.35rem 0.8rem;font-size:0.88rem;
+  animation:chipPop 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.p-chip.me{border-color:var(--ng);box-shadow:0 0 8px rgba(0,255,204,0.2);}
+.game-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;max-width:480px;width:100%;}
+@media(max-width:360px){.game-grid{grid-template-columns:repeat(3,1fr);}}
+.g-tile{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:0.8rem 0.3rem;text-align:center;cursor:pointer;
+  transition:all 0.2s;user-select:none;}
+.g-tile .gi{font-size:1.6rem;margin-bottom:0.25rem;}
+.g-tile .gn{font-size:0.58rem;color:var(--muted);font-family:'Share Tech Mono',monospace;letter-spacing:0.04em;}
+.g-tile:hover{border-color:rgba(255,0,153,0.4);background:rgba(255,0,153,0.07);transform:translateY(-2px);}
+.g-tile.on{border-color:var(--np);background:rgba(255,0,153,0.12);box-shadow:0 0 16px var(--gp);}
+.g-tile.on .gn{color:var(--np);}
+.lob-actions{display:flex;gap:0.6rem;max-width:480px;width:100%;}
+
+/* ════════════════════
+   GAME CHROME
+════════════════════ */
+#game{padding:0.8rem;gap:0.6rem;}
+.g-top{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:560px;}
+.g-mode{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:var(--nc);}
+.g-rnd{font-family:'Orbitron',sans-serif;font-weight:700;font-size:0.82rem;color:var(--ng);letter-spacing:0.1em;}
+.turn-bar{width:100%;max-width:560px;display:flex;align-items:center;gap:0.7rem;
+  padding:0.6rem 1rem;background:rgba(255,0,153,0.07);border:1px solid rgba(255,0,153,0.22);
+  border-radius:8px;position:relative;}
+.turn-bar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(var(--np),var(--nc));border-radius:8px 0 0 8px;}
+.t-dot{width:6px;height:6px;border-radius:50%;background:var(--np);flex-shrink:0;animation:pulseDot 1.6s infinite;}
+.t-name{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.05rem;color:var(--np);letter-spacing:0.04em;}
+.t-lbl{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--ng);letter-spacing:0.12em;}
+.act-bar{display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;width:100%;max-width:560px;margin-top:0.2rem;}
+.rxn-bar{display:flex;gap:0.45rem;justify-content:center;width:100%;max-width:560px;}
+.rxn-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:20px;padding:0.35rem 0.6rem;font-size:1.15rem;cursor:pointer;
+  transition:all 0.15s;user-select:none;position:relative;}
+.rxn-btn:hover{background:rgba(255,255,255,0.1);transform:scale(1.12);}
+.rxn-cnt{position:absolute;top:-5px;right:-5px;background:var(--np);color:#000;
+  font-family:'Share Tech Mono',monospace;font-size:0.5rem;border-radius:8px;
+  padding:0.08rem 0.25rem;display:none;font-weight:700;}
+.rxn-cnt.show{display:block;}
+.emoji-float{position:fixed;pointer-events:none;z-index:400;font-size:2rem;
+  animation:floatUp 1.8s ease-out forwards;}
+
+/* ════════════════════
+   GAME UIs shared styles
+════════════════════ */
+.game-card{width:calc(100% - 1rem);max-width:520px;padding:1.2rem;border-radius:14px;
+  background:linear-gradient(135deg,rgba(12,0,35,0.97),rgba(6,0,18,0.99));
+  border:1px solid rgba(255,0,153,0.2);}
+
+/* ── 国王令 ── */
+.k-arena{position:relative;width:min(300px,82vw);height:min(300px,82vw);flex-shrink:0;}
+.k-ring{position:absolute;top:50%;left:50%;border-radius:50%;transform:translate(-50%,-50%);
+  border:1px solid rgba(255,0,153,0.1);pointer-events:none;}
+.k-ring.r1{width:88%;height:88%;animation:ringRot 18s linear infinite;}
+.k-ring.r2{width:65%;height:65%;animation:ringRot 12s linear infinite reverse;}
+.k-throne{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:68px;height:68px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,0,153,0.15),rgba(255,0,153,0.03));
+  border:2px solid rgba(255,0,153,0.3);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:2;transition:all 0.4s;}
+.k-throne.crowned{border-color:var(--ng);background:radial-gradient(circle,rgba(0,255,204,0.18),rgba(0,255,204,0.03));
+  box-shadow:0 0 35px var(--gg);}
+.k-throne-icon{font-size:1.6rem;transition:all 0.4s;}
+.k-throne-nm{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--ng);margin-top:2px;
+  max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.seat{position:absolute;width:48px;height:48px;border-radius:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.25s;z-index:3;user-select:none;}
+.seat .sav{font-size:1rem;}
+.seat .snm{font-family:'Share Tech Mono',monospace;font-size:0.44rem;color:var(--txt);margin-top:1px;
+  max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;}
+.seat.is-king{border-color:var(--ng);background:rgba(0,255,204,0.1);box-shadow:0 0 14px var(--gg);}
+.seat.sel1{border-color:var(--np);background:rgba(255,0,153,0.14);animation:seatPulse 1s ease infinite;}
+.seat.sel2{border-color:var(--nc);background:rgba(123,47,255,0.1);animation:seatPulse 1s ease infinite 0.3s;}
+.cmd-card{padding:1.1rem;border-radius:14px;animation:slideUp 0.4s ease;
+  background:linear-gradient(135deg,rgba(12,0,38,0.97),rgba(6,0,20,0.99));
+  border:1px solid rgba(0,255,204,0.2);}
+.cmd-hd{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ng);margin-bottom:0.5rem;}
+.cmd-bd{font-size:1rem;line-height:1.7;color:var(--txt);margin-bottom:0.6rem;}
+.cmd-asgn{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);margin-bottom:0.5rem;}
+.cmd-asgn span{color:var(--np);}
+.chips{display:flex;flex-wrap:wrap;gap:0.35rem;}
+.chip{background:rgba(255,0,153,0.09);border:1px solid rgba(255,0,153,0.25);
+  border-radius:20px;padding:0.25rem 0.7rem;font-size:0.7rem;color:var(--np);
+  cursor:pointer;transition:all 0.18s;}
+.chip:hover,.chip.on{background:rgba(255,0,153,0.2);border-color:var(--np);}
+.btn-another{background:rgba(0,255,204,0.07);border:1px solid rgba(0,255,204,0.25);
+  border-radius:20px;padding:0.25rem 0.75rem;font-size:0.68rem;color:var(--ng);
+  cursor:pointer;transition:all 0.18s;font-family:'Noto Sans SC',sans-serif;}
+
+/* ── T or D ── */
+.tod-spot{display:flex;flex-direction:column;align-items:center;}
+.spot-ring{width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(0,255,204,0.18),rgba(0,255,204,0.03));
+  border:2px solid rgba(0,255,204,0.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 0 50px rgba(0,255,204,0.12);animation:spotBreath 3s ease-in-out infinite;}
+.sp-av{font-size:2.6rem;}
+.sp-nm{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem;color:var(--ng);margin-top:0.3rem;}
+.tod-btns{display:flex;gap:0.8rem;width:100%;}
+.tod-btn{flex:1;padding:1rem 0.5rem;border-radius:14px;text-align:center;cursor:pointer;
+  transition:all 0.25s;user-select:none;border:1.5px solid;}
+.tod-btn.truth{background:rgba(0,255,204,0.05);border-color:rgba(0,255,204,0.22);}
+.tod-btn.truth:hover,.tod-btn.truth.on{background:rgba(0,255,204,0.12);border-color:var(--ng);
+  box-shadow:0 0 25px var(--gg);transform:translateY(-2px);}
+.tod-btn.dare{background:rgba(255,0,153,0.05);border-color:rgba(255,0,153,0.22);}
+.tod-btn.dare:hover,.tod-btn.dare.on{background:rgba(255,0,153,0.12);border-color:var(--np);
+  box-shadow:0 0 25px var(--gp);transform:translateY(-2px);}
+.tod-bi{font-size:1.8rem;margin-bottom:0.3rem;}
+.tod-bl{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.3rem;letter-spacing:0.06em;}
+.tod-btn.truth .tod-bl{color:var(--ng);}
+.tod-btn.dare .tod-bl{color:var(--np);}
+.tod-reveal{width:100%;padding:1.2rem;border-radius:14px;display:none;animation:revealBurst 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+.tod-reveal.show{display:block;}
+.tod-cat{font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:0.28em;margin-bottom:0.5rem;}
+.tod-cat.t{color:var(--ng);}
+.tod-cat.d{color:var(--np);}
+.tod-text{font-size:1.05rem;line-height:1.75;color:var(--txt);margin-bottom:0.4rem;}
+
+/* ── NHIE ── */
+.nhie-card{width:100%;padding:1.5rem;border-radius:18px;text-align:center;
+  background:linear-gradient(135deg,rgba(0,15,12,0.97),rgba(0,8,6,0.99));
+  border:1.5px solid rgba(0,255,204,0.2);}
+.nhie-bdg{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:0.6rem;
+  letter-spacing:0.25em;color:var(--ng);border:1px solid rgba(0,255,204,0.25);
+  border-radius:4px;padding:0.2rem 0.7rem;margin-bottom:0.8rem;}
+.nhie-stmt{font-size:1.15rem;line-height:1.7;color:var(--txt);margin-bottom:0.4rem;}
+.nhie-grid{display:flex;flex-wrap:wrap;gap:0.45rem;justify-content:center;width:100%;}
+.nhie-btn{display:flex;flex-direction:column;align-items:center;gap:0.22rem;
+  background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:10px;padding:0.7rem 0.6rem;cursor:pointer;transition:all 0.2s;min-width:64px;}
+.nhie-btn.drank{border-color:var(--ng);background:rgba(0,255,204,0.1);box-shadow:0 0 12px var(--gg);}
+.nhie-btn .nd{font-size:0.68rem;opacity:0;transition:opacity 0.2s;}
+.nhie-btn.drank .nd{opacity:1;color:var(--ng);}
+
+/* ── WYR ── */
+.wyr-arena{width:100%;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);
+  position:relative;min-height:145px;display:flex;}
+.wyr-half{flex:1;padding:1.2rem 0.8rem;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;}
+.wyr-half.A{background:rgba(123,47,255,0.06);border-right:1px solid rgba(255,255,255,0.05);}
+.wyr-half.B{background:rgba(0,255,204,0.05);}
+.wyr-half.A:hover{background:rgba(123,47,255,0.12);}
+.wyr-half.B:hover{background:rgba(0,255,204,0.1);}
+.wyr-opt{font-size:0.95rem;line-height:1.5;color:var(--txt);margin-bottom:0.4rem;}
+.wyr-pct{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.8rem;}
+.wyr-half.A .wyr-pct{color:var(--nc);}
+.wyr-half.B .wyr-pct{color:var(--ng);}
+.wyr-half::after{content:'';position:absolute;bottom:0;left:0;height:3px;transition:width 0.5s;}
+.wyr-half.A::after{background:var(--nc);width:var(--bar,0%);}
+.wyr-half.B::after{background:var(--ng);width:var(--bar,0%);}
+.wyr-or{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--bg);border:1px solid rgba(255,255,255,0.1);border-radius:50%;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);z-index:2;pointer-events:none;}
+.wyr-voters{display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:center;width:100%;}
+.wyr-voter{display:flex;flex-direction:column;align-items:center;gap:0.2rem;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+  border-radius:9px;padding:0.45rem 0.5rem;cursor:pointer;transition:all 0.2s;min-width:52px;}
+.wyr-voter.va{border-color:var(--nc);background:rgba(123,47,255,0.1);}
+.wyr-voter.vb{border-color:var(--ng);background:rgba(0,255,204,0.07);}
+
+/* ── DICE ── */
+.dice-stage{width:calc(100% - 1rem);max-width:520px;padding:1.2rem;border-radius:14px;
+  background:linear-gradient(135deg,rgba(8,0,25,0.96),rgba(4,0,14,0.99));
+  border:1px solid rgba(123,47,255,0.28);}
+.dice-title{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem;color:var(--ng);
+  margin-bottom:0.7rem;letter-spacing:0.08em;}
+.dice-roll-area{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:0.6rem;}
+.btn-dice{background:rgba(123,47,255,0.12);border:1px solid rgba(123,47,255,0.35);
+  border-radius:8px;padding:0.55rem 1.1rem;color:var(--ng);font-size:0.85rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;}
+.btn-dice:hover{background:rgba(123,47,255,0.22);box-shadow:0 0 16px rgba(0,255,204,0.18);}
+
+/* ── FIST ── */
+.fist-card{width:calc(100% - 1rem);max-width:520px;padding:1.2rem;border-radius:14px;
+  background:linear-gradient(135deg,rgba(18,5,35,0.97),rgba(10,2,22,0.99));
+  border:1px solid rgba(123,47,255,0.28);}
+.fist-title{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.1rem;color:var(--nc);}
+.fstep-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.3s;}
+.fstep-dot.active{background:var(--np);box-shadow:0 0 10px rgba(255,0,153,0.5);}
+.fstep-dot.done{background:rgba(0,220,80,0.7);}
+.fstep-lbl{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;color:var(--muted);transition:color 0.3s;}
+.fstep-lbl.active{color:var(--np);}
+.fist-choice2{display:flex;flex-direction:column;align-items:center;gap:0.22rem;
+  background:rgba(123,47,255,0.07);border:1.5px solid rgba(123,47,255,0.22);
+  border-radius:12px;padding:0.7rem 0.8rem;cursor:pointer;transition:all 0.2s;
+  flex:1;user-select:none;}
+.fist-choice2>*:first-child{font-size:1.8rem;}
+.fist-choice2 span{font-size:0.68rem;color:var(--muted);}
+.fist-choice2:hover{border-color:rgba(123,47,255,0.5);background:rgba(123,47,255,0.15);}
+.fist-choice2.chosen{border-color:var(--ng);background:rgba(0,255,204,0.1);box-shadow:0 0 16px rgba(0,255,204,0.2);}
+.fnum-btn{background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.25);
+  border-radius:7px;width:30px;height:30px;color:var(--txt);font-size:1rem;
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.fnum-btn:hover{background:rgba(123,47,255,0.2);}
+
+/* ── KTV ── */
+.ktv-card{width:100%;padding:1.4rem;border-radius:16px;text-align:center;
+  background:linear-gradient(135deg,rgba(8,0,30,0.97),rgba(4,0,18,0.99));
+  border:1.5px solid rgba(0,255,204,0.2);}
+.ktv-icon{font-size:2.3rem;margin-bottom:0.4rem;}
+.ktv-title{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ng);margin-bottom:0.5rem;}
+.ktv-task{font-size:1rem;line-height:1.7;color:var(--txt);margin-bottom:0.4rem;}
+.ktv-sub{font-size:0.78rem;color:var(--muted);}
+.ktv-player-tag{display:inline-block;background:rgba(0,255,204,0.07);border:1px solid rgba(0,255,204,0.2);
+  border-radius:20px;padding:0.22rem 0.65rem;font-size:0.78rem;color:var(--ng);margin:0.2rem;}
+
+/* ════════════════════
+   🃏 红黑牌 FULL REDESIGN
+════════════════════ */
+/* Phase containers */
+.rnp-phase{width:calc(100% - 1rem);max-width:520px;}
+
+/* Question card */
+.rnp-q-card{padding:1.1rem 1.3rem;border-radius:12px;text-align:center;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);margin-bottom:0.9rem;}
+.rnp-q-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.22em;
+  color:var(--nc);opacity:0.8;margin-bottom:0.4rem;text-transform:uppercase;}
+.rnp-q-text{font-size:1.05rem;font-weight:700;line-height:1.6;color:var(--txt);}
+.rnp-q-num{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);margin-top:0.3rem;}
+
+/* Vote buttons */
+.rnp-vote-row{display:flex;gap:0.7rem;margin-bottom:0.7rem;}
+.rnp-vbtn{flex:1;padding:1.1rem 0.5rem;border-radius:12px;border:2px solid;
+  cursor:pointer;transition:all 0.2s;text-align:center;user-select:none;position:relative;}
+.rnp-vbtn.red{background:rgba(200,0,30,0.07);border-color:rgba(200,0,30,0.28);color:var(--red);}
+.rnp-vbtn.blk{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.14);color:var(--blk);}
+.rnp-vbtn.red.chosen,.rnp-vbtn.red:hover{background:rgba(200,0,30,0.2);border-color:var(--red);
+  box-shadow:0 0 22px rgba(255,50,50,0.3);}
+.rnp-vbtn.blk.chosen,.rnp-vbtn.blk:hover{background:rgba(200,200,200,0.08);border-color:#ccc;
+  box-shadow:0 0 16px rgba(200,200,200,0.1);}
+.rnp-vbtn .vi{font-size:2rem;margin-bottom:0.25rem;}
+.rnp-vbtn .vl{font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;}
+.rnp-vbtn .vs{font-size:0.65rem;color:var(--muted);margin-top:0.15rem;}
+.rnp-vbtn.confirmed{pointer-events:none;}
+
+/* Timer */
+.rnp-timer-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden;margin:0.5rem 0;}
+.rnp-timer-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ng),var(--np));
+  transition:width 1s linear;}
+
+/* Voter chips during vote phase */
+.rnp-chip-row{display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:center;margin-bottom:0.6rem;}
+.rnp-chip{display:flex;align-items:center;gap:0.3rem;padding:0.28rem 0.6rem;
+  border-radius:20px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.025);transition:all 0.3s;}
+.rnp-chip.rv{background:rgba(200,0,30,0.18);border-color:rgba(255,60,60,0.5);color:#ff8888;}
+.rnp-chip.bv{background:rgba(200,200,200,0.07);border-color:rgba(180,180,180,0.3);color:#bbb;}
+.rnp-chip.pend{animation:pulseDot 1.4s ease infinite;}
+
+/* Phase 2: guess + bet */
+.rnp-phase2-inner{padding:1rem 1.1rem;border-radius:12px;
+  background:linear-gradient(135deg,rgba(10,0,28,0.97),rgba(5,0,16,0.99));
+  border:1px solid rgba(255,0,153,0.18);}
+.rnp-section{margin-bottom:0.9rem;}
+.rnp-section-hd{font-family:'Orbitron',sans-serif;font-size:0.62rem;letter-spacing:0.18em;
+  text-transform:uppercase;margin-bottom:0.55rem;padding-bottom:0.3rem;
+  border-bottom:1px solid rgba(255,255,255,0.06);}
+.rnp-section-hd.pink{color:var(--np);}
+.rnp-section-hd.teal{color:var(--ng);}
+.rnp-section-hd.purple{color:#c090ff;}
+
+/* Total-guess grid */
+.rnp-tg-grid{display:flex;flex-wrap:wrap;gap:0.45rem;justify-content:center;}
+.rnp-tg-cell{display:flex;flex-direction:column;align-items:center;gap:0.18rem;
+  padding:0.45rem 0.5rem;border-radius:8px;background:rgba(255,255,255,0.025);
+  border:1px solid rgba(255,255,255,0.07);min-width:60px;}
+.rnp-tg-cell .tg-av{font-size:1rem;}
+.rnp-tg-cell .tg-nm{font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted);}
+.rnp-tg-cell .tg-num{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--ng);min-height:1.4rem;text-align:center;}
+.rnp-tg-cell .tg-sub{font-size:0.55rem;color:var(--muted);}
+.tg-adj{display:flex;gap:0.15rem;align-items:center;}
+.tg-btn{width:22px;height:22px;border-radius:4px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);color:var(--txt);font-size:0.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;}
+.tg-btn:hover{background:rgba(0,255,204,0.15);border-color:rgba(0,255,204,0.3);}
+
+/* Reveal result box */
+.rnp-reveal-box{padding:0.9rem;border-radius:10px;background:rgba(255,255,255,0.025);
+  border:1px solid rgba(255,255,255,0.07);margin-top:0.5rem;}
+.rnp-total-big{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:900;
+  color:var(--red);text-align:center;margin:0.3rem 0;}
+.rnp-voter-reveal{display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:center;margin:0.5rem 0;}
+.rnp-chip-result{padding:0.28rem 0.6rem;border-radius:20px;font-size:0.82rem;}
+.rnp-chip-result.r{background:rgba(200,0,30,0.2);border:1px solid rgba(255,60,60,0.45);color:#ff8888;}
+.rnp-chip-result.b{background:rgba(200,200,200,0.07);border:1px solid rgba(180,180,180,0.3);color:#bbb;}
+.rnp-penalty-line{font-size:0.88rem;font-weight:700;color:var(--np);text-align:center;margin-top:0.5rem;}
+
+/* ── Bet flow ── */
+.rnp-bet-launch{padding:0.8rem;border-radius:10px;background:rgba(123,47,255,0.06);
+  border:1px solid rgba(123,47,255,0.2);margin-bottom:0.6rem;}
+.rnp-bet-who-grid{display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;margin:0.6rem 0;}
+.rnp-bet-target{display:flex;flex-direction:column;align-items:center;gap:0.2rem;
+  padding:0.5rem 0.6rem;border-radius:10px;cursor:pointer;transition:all 0.2s;
+  background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);min-width:58px;}
+.rnp-bet-target:hover{border-color:rgba(123,47,255,0.4);background:rgba(123,47,255,0.1);}
+.rnp-bet-target.used{opacity:0.3;pointer-events:none;}
+.rnp-bet-target.selected{border-color:var(--nc);background:rgba(123,47,255,0.18);
+  box-shadow:0 0 12px rgba(123,47,255,0.3);}
+.rnp-stake-row{display:flex;align-items:center;gap:0.5rem;justify-content:center;
+  margin:0.6rem 0 0.7rem;}
+.stake-lbl{font-size:0.78rem;color:var(--muted);}
+.stake-adj{display:flex;align-items:center;gap:0.4rem;}
+.stake-num{font-family:'Orbitron',sans-serif;font-size:1.5rem;color:var(--ng);
+  min-width:36px;text-align:center;}
+.stake-icon{font-size:1.3rem;}
+
+/* Pending bets list */
+.rnp-pending-bets{display:flex;flex-direction:column;gap:0.35rem;margin-top:0.5rem;}
+.rnp-bet-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.7rem;
+  border-radius:9px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);
+  font-size:0.82rem;}
+.rnp-bet-item .bi-badge{font-family:'Orbitron',sans-serif;font-size:0.58rem;
+  padding:0.15rem 0.4rem;border-radius:4px;border:1px solid;flex-shrink:0;}
+.bi-badge.pending{border-color:rgba(255,221,0,0.4);color:var(--no);background:rgba(255,221,0,0.07);}
+.bi-badge.accepted{border-color:rgba(0,255,204,0.4);color:var(--ng);background:rgba(0,255,204,0.07);}
+.bi-badge.declined{border-color:rgba(255,0,153,0.3);color:var(--np);background:rgba(255,0,153,0.06);text-decoration:line-through;}
+
+/* Notification overlay for bet request */
+.bet-notify{position:fixed;bottom:0;left:0;right:0;z-index:700;
+  padding:1.2rem;background:linear-gradient(0deg,rgba(5,0,20,0.98),rgba(10,0,32,0.96));
+  border-top:1.5px solid rgba(123,47,255,0.45);
+  transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.2,0.64,1);}
+.bet-notify.show{transform:translateY(0);}
+.bet-notify-title{font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--nc);
+  letter-spacing:0.12em;margin-bottom:0.5rem;}
+.bet-notify-body{font-size:0.95rem;line-height:1.6;margin-bottom:0.8rem;}
+.bet-notify-body .hlt{color:var(--no);font-weight:700;}
+.bet-notify-btns{display:flex;gap:0.6rem;}
+
+/* Reveal overlay */
+.rnp-reveal-overlay{position:fixed;inset:0;z-index:800;
+  background:rgba(5,0,16,0.95);backdrop-filter:blur(10px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;text-align:center;}
+.rnp-reveal-overlay.show{display:flex;animation:blastIn 0.3s ease;}
+.rro-from{font-size:2.5rem;margin-bottom:0.3rem;}
+.rro-vs{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;
+  color:var(--muted);margin:0.2rem 0;}
+.rro-target{font-size:2.5rem;margin-bottom:0.8rem;}
+.rro-cards{display:flex;gap:1.5rem;align-items:center;justify-content:center;margin-bottom:0.9rem;}
+.rro-card{width:80px;height:110px;border-radius:12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-size:2.5rem;border:2px solid;}
+.rro-card.r{background:rgba(200,0,30,0.2);border-color:rgba(255,60,60,0.6);
+  box-shadow:0 0 30px rgba(255,0,50,0.3);}
+.rro-card.b{background:rgba(200,200,200,0.07);border-color:rgba(180,180,180,0.4);
+  box-shadow:0 0 20px rgba(200,200,200,0.1);}
+.rro-card.mystery{background:rgba(123,47,255,0.12);border-color:rgba(123,47,255,0.4);
+  animation:pulseDot 0.8s ease-in-out infinite;}
+.rro-result{font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:900;margin-bottom:0.4rem;}
+.rro-drink{font-size:1.1rem;margin-bottom:1.2rem;}
+
+/* Bet history log */
+.rnp-history{display:flex;flex-direction:column;gap:0.3rem;}
+.rnp-hist-row{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;
+  border-radius:8px;font-size:0.8rem;}
+.rnp-hist-row.win{background:rgba(0,220,80,0.07);border:1px solid rgba(0,220,80,0.18);}
+.rnp-hist-row.lose{background:rgba(255,0,100,0.06);border:1px solid rgba(255,0,100,0.16);}
+
+/* ════════════════════
+   OVERLAYS
+════════════════════ */
+.offline-anchor{position:fixed;inset:0;z-index:700;background:rgba(5,0,16,0.95);backdrop-filter:blur(9px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+.offline-anchor.show{display:flex;animation:blastIn 0.3s ease;}
+.oa-icon{font-size:3.5rem;margin-bottom:0.8rem;}
+.oa-title{font-family:'Orbitron',sans-serif;font-weight:700;font-size:1.5rem;color:var(--ng);
+  margin-bottom:0.5rem;letter-spacing:0.08em;}
+.oa-instruct{font-size:1rem;line-height:1.75;color:var(--txt);max-width:360px;margin-bottom:0.8rem;}
+.oa-hint{font-size:0.78rem;color:var(--muted);font-style:italic;margin-bottom:1.2rem;}
+.oa-timer{font-family:'Share Tech Mono',monospace;font-size:3rem;color:var(--ng);
+  animation:pulseDot 1s ease-in-out infinite;margin-bottom:1.2rem;}
+.oa-btns{display:flex;gap:0.7rem;flex-wrap:wrap;justify-content:center;width:100%;max-width:340px;}
+.btn-did{background:linear-gradient(135deg,rgba(0,200,70,0.18),rgba(0,200,70,0.07));
+  border:1.5px solid #00dc50;color:#00dc50;font-size:1rem;font-weight:700;
+  padding:0.85rem 1.2rem;border-radius:10px;cursor:pointer;flex:2;font-family:'Orbitron',sans-serif;}
+.btn-chicken{background:transparent;border:1px solid rgba(255,221,0,0.2);color:rgba(255,221,0,0.5);
+  font-size:0.82rem;padding:0.85rem 0.9rem;border-radius:10px;cursor:pointer;flex:1;
+  font-family:'Noto Sans SC',sans-serif;}
+
+.yt-blast{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;align-items:center;
+  justify-content:center;background:rgba(5,0,16,0.92);backdrop-filter:blur(7px);cursor:pointer;}
+.yt-av{font-size:4.5rem;}
+.yt-lbl{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:0.3em;color:var(--muted);}
+.yt-name{font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(2.5rem,11vw,5.5rem);line-height:0.95;
+  background:linear-gradient(135deg,var(--np),#ff66cc,var(--ng));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 22px rgba(255,0,153,0.5));}
+.yt-sub{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);
+  margin-top:0.8rem;letter-spacing:0.18em;animation:blink 1.2s step-end infinite;}
+
+.board-overlay{position:fixed;inset:0;z-index:600;background:rgba(5,0,16,0.96);backdrop-filter:blur(12px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.4rem;}
+.board-overlay.show{display:flex;animation:blastIn 0.3s ease;}
+.board-ttl{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.7rem;color:var(--ng);margin-bottom:0.15rem;}
+.board-sub{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:var(--muted);margin-bottom:1.1rem;}
+.board-list{width:100%;max-width:380px;display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.2rem;}
+.board-row{display:flex;align-items:center;gap:0.65rem;padding:0.6rem 0.85rem;
+  border-radius:10px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);}
+.b-rank{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.1rem;color:var(--muted);width:20px;text-align:center;}
+.b-stats{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);text-align:right;line-height:1.6;margin-left:auto;}
+.b-sv{color:var(--ng);}
+
+.loader{position:fixed;inset:0;z-index:900;background:rgba(5,0,16,0.88);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:0.8rem;}
+.loader.on{display:flex;}
+.loader-ring{width:56px;height:56px;border-radius:50%;border:2px solid transparent;
+  border-top-color:var(--np);border-right-color:var(--nc);border-bottom-color:var(--ng);
+  animation:spin 1s linear infinite;}
+.loader-txt{font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:0.2em;
+  color:var(--muted);animation:blink 1.2s step-end infinite;}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  background:rgba(10,0,35,0.97);border:1px solid rgba(0,255,204,0.35);
+  border-radius:28px;padding:0.55rem 1.2rem;color:var(--ng);
+  font-family:'Share Tech Mono',monospace;font-size:0.75rem;
+  z-index:800;white-space:nowrap;pointer-events:none;
+  animation:toastIn 0.25s ease;backdrop-filter:blur(10px);}
+
+/* Feed */
+.feed-section{width:100%;max-width:560px;margin-top:0.5rem;}
+.feed-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem;}
+.feed-ttl{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:var(--muted);}
+.feed-scroll{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:0.28rem;}
+.feed-item{display:flex;gap:0.5rem;align-items:flex-start;padding:0.42rem 0.6rem;
+  border-radius:8px;background:rgba(255,255,255,0.02);border-left:2px solid transparent;
+  font-size:0.78rem;line-height:1.4;color:var(--txt);opacity:0.85;}
+.feed-item.kings{border-color:var(--ng);}
+.feed-item.tod{border-color:var(--np);}
+.feed-item.nhie{border-color:var(--ng);}
+.feed-item.wyr{border-color:var(--nc);}
+.feed-item.liar{border-color:var(--nc);}
+.feed-item.fist{border-color:var(--nc);}
+.feed-item.ktv{border-color:var(--ng);}
+.feed-item.rnp{border-color:var(--red);}
+.feed-item.sys{border-color:var(--muted);font-style:italic;color:var(--muted);}
+.feed-time{flex-shrink:0;font-family:'Share Tech Mono',monospace;font-size:0.53rem;color:var(--muted);margin-top:2px;}
+.board-btn{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;
+  color:var(--muted);background:transparent;border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:0.22rem 0.65rem;cursor:pointer;}
+.feed-clear{font-family:'Share Tech Mono',monospace;font-size:0.53rem;color:var(--muted);cursor:pointer;}
+
+/* ════════════════════
+   KEYFRAMES
+════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes chipPop{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+@keyframes blastIn{from{opacity:0}to{opacity:1}}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:0.25}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ringRot{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes seatPulse{0%,100%{box-shadow:0 0 12px var(--gp)}50%{box-shadow:0 0 26px var(--gp)}}
+@keyframes spotBreath{0%,100%{box-shadow:0 0 50px rgba(0,255,204,0.12)}50%{box-shadow:0 0 70px rgba(0,255,204,0.22)}}
+@keyframes revealBurst{0%{opacity:0;transform:scale(0.84)}60%{transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-200px) scale(1.4)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes diceRoll{0%,100%{transform:none}25%{transform:rotate(-14deg) scale(1.1)}75%{transform:rotate(14deg) scale(1.1)}}
+@keyframes ytBounce{0%{opacity:0;transform:scale(0.4) translateY(35px)}100%{opacity:1;transform:none}}
+
+/* ── LANG TOGGLE ── */
+.lang-toggle{position:fixed;top:0.7rem;right:0.7rem;z-index:990;
+  display:flex;align-items:center;gap:0;border-radius:8px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.12);}
+.lang-btn{padding:0.28rem 0.55rem;font-family:'Share Tech Mono',monospace;font-size:0.65rem;
+  letter-spacing:0.12em;cursor:pointer;transition:all 0.18s;background:rgba(255,255,255,0.04);
+  color:var(--muted);border:none;}
+.lang-btn.on{background:rgba(0,255,204,0.15);color:var(--ng);}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,0,153,0.35);border-radius:2px}
+</style>
+</head>
+<body>
+
+
+<!-- Language toggle (persistent) -->
+<div class="lang-toggle" id="langToggle">
+  <div class="lang-btn on" id="lbZh" onclick="setLang('zh')">中文</div>
+  <div class="lang-btn" id="lbEn" onclick="setLang('en')">EN</div>
+</div>
+<!-- ══ AUTH ══ -->
+<div id="auth" class="screen active">
+  <div class="auth-hero">
+    <div class="auth-badge">// SYSTEM ONLINE //</div>
+    <div class="auth-title">开车了</div>
+    <div class="auth-sub" id="appSub">AI DM LOADED · ADULTS ONLY</div>
+  </div>
+  <div class="panel" style="width:100%;max-width:400px;padding:1.5rem;position:relative;">
+    <div class="auth-tabs">
+      <div class="auth-tab on" id="tabLogin" onclick="switchTab('login')">登 录</div>
+      <div class="auth-tab" id="tabReg" onclick="switchTab('reg')">注 册</div>
+    </div>
+
+    <!-- Login form -->
+    <div id="formLogin">
+      <label class="field-lbl">手机号 / 昵称</label>
+      <input class="neo-input" id="lPhone" placeholder="手机号或昵称" autocomplete="off"/>
+      <label class="field-lbl">密码</label>
+      <input class="neo-input" id="lPass" type="password" placeholder="密码"/>
+      <button class="btn btn-primary" id="btnLoginBtn" onclick="doLogin()" style="margin-bottom:0.6rem">[ 登 录 ]</button>
+      <button class="btn btn-ghost" id="btnGuestBtn" onclick="doGuest()" style="width:100%">游客快速进入</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="formReg" style="display:none;">
+      <label class="field-lbl">昵称</label>
+      <input class="neo-input" id="rName" placeholder="你的名字" maxlength="10" autocomplete="off"/>
+      <label class="field-lbl">手机号</label>
+      <input class="neo-input" id="rPhone" placeholder="11位手机号" maxlength="11" autocomplete="off"/>
+      <label class="field-lbl">密码</label>
+      <input class="neo-input" id="rPass" type="password" placeholder="设置密码"/>
+      <label class="field-lbl" id="genderLbl">性别</label>
+      <div class="gender-btns" id="genderBtns">
+        <div class="gender-btn" id="gMaleBtn" onclick="pickGender('m')">♂ 男</div>
+        <div class="gender-btn" id="gFemBtn" onclick="pickGender('f')">♀ 女</div>
+        <div class="gender-btn" id="gOtherBtn" onclick="pickGender('x')">✦ 不透露</div>
+      </div>
+      <label class="field-lbl" id="avLbl">选择头像</label>
+      <div class="av-grid" id="avGrid"></div>
+      <button class="btn btn-primary" id="btnRegBtn" onclick="doRegister()">[ 注 册 并 登 录 ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ROOM SELECT ══ -->
+<div id="roomSelect" class="screen">
+  <div class="rs-header">
+    <div class="rs-user">
+      <span class="rs-av" id="rsAv">🎮</span>
+      <span class="rs-name" id="rsName">—</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="rsLogoutBtn" onclick="doLogout()">退出</button>
+  </div>
+  <div style="width:100%;max-width:480px;display:flex;gap:0.5rem;margin-bottom:0.3rem;">
+    <button class="btn btn-primary" id="rsCreateBtn" onclick="showCreateRoom()" style="flex:1;font-size:0.85rem;padding:0.75rem">＋ 创建房间</button>
+    <button class="btn btn-teal" id="rsJoinBtn" onclick="showJoinRoom()" style="flex:1;font-size:0.85rem;padding:0.75rem">加入房间</button>
+  </div>
+  <div class="slbl" id="pubRoomsLbl" style="width:100%;max-width:480px;">公开房间</div>
+  <div id="publicRooms" style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:0.4rem;"></div>
+  <div class="slbl" id="myRoomsLbl" style="width:100%;max-width:480px;margin-top:0.5rem;">我的最近房间</div>
+  <div id="myRooms" style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:0.4rem;"></div>
+</div>
+
+<!-- Create room modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <div class="modal-title" id="crModalTitle">// 创建新房间</div>
+    <label class="field-lbl">房间名称</label>
+    <input class="neo-input" id="crName" placeholder="今晚的局" maxlength="20"/>
+    <div class="toggle-row">
+      <span class="toggle-lbl" id="crPublicLbl2">公开房间（所有人可见）</span>
+      <div class="toggle" id="crPublicToggle" onclick="togglePublic()"></div>
+    </div>
+    <div id="crPassRow" style="display:none;">
+      <label class="field-lbl" id="crPassLbl2">房间密码（可选）</label>
+      <input class="neo-input" id="crPass" placeholder="留空则无密码" maxlength="8"/>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-primary" id="crCreateBtn" onclick="doCreateRoom()" style="flex:2">创 建</button>
+      <button class="btn btn-ghost" id="crCancelBtn" onclick="closeModal('createModal')" style="flex:1">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join room modal -->
+<div class="modal-overlay" id="joinModal">
+  <div class="modal-box">
+    <div class="modal-title" id="jModalTitle">// 加入房间</div>
+    <label class="field-lbl">房间码</label>
+    <input class="neo-input" id="jCode" placeholder="6位房间码" maxlength="6" style="text-transform:uppercase;letter-spacing:0.2em;"/>
+    <label class="field-lbl">密码（如有）</label>
+    <input class="neo-input" id="jPass" type="password" placeholder="公开房间留空"/>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-teal" id="jJoinBtn" onclick="doJoinRoom()" style="flex:2">加 入</button>
+      <button class="btn btn-ghost" id="jCancelBtn" onclick="closeModal('joinModal')" style="flex:1">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOBBY ══ -->
+<div id="lobby" class="screen">
+  <div class="lobby-top" style="padding:0.8rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">
+      <div class="lob-title" id="lobTitle">LOBBY_</div>
+      <div class="room-pill" id="lCode" onclick="copyRoom()">——</div>
+    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.7rem;" id="lobHint">复制房间码分享给朋友</div>
+    <div class="slbl" id="lobPlayerLbl">在场玩家</div>
+    <div class="players-wrap" id="lobbyPlayers" style="margin-bottom:0.7rem;"></div>
+    <div class="slbl" id="lobGameLbl" style="margin-bottom:0.4rem;">选择游戏</div>
+    <div class="game-grid" style="margin-bottom:0.8rem;">
+      <div class="g-tile" onclick="pickGame('kings')" data-g="kings"><div class="gi">👑</div><div class="gn">国王令</div></div>
+      <div class="g-tile" onclick="pickGame('rnp')" data-g="rnp"><div class="gi">🃏</div><div class="gn">红黑牌</div></div>
+      <div class="g-tile" onclick="pickGame('tod')" data-g="tod"><div class="gi">🎭</div><div class="gn">真心话</div></div>
+      <div class="g-tile" onclick="pickGame('nhie')" data-g="nhie"><div class="gi">🥂</div><div class="gn">从来没有</div></div>
+      <div class="g-tile" onclick="pickGame('wyr')" data-g="wyr"><div class="gi">🆚</div><div class="gn">二选一</div></div>
+      <div class="g-tile" onclick="pickGame('liar')" data-g="liar"><div class="gi">🎲</div><div class="gn">骰盅大话</div></div>
+      <div class="g-tile" onclick="pickGame('fist')" data-g="fist"><div class="gi">✊</div><div class="gn">划 拳</div></div>
+      <div class="g-tile" onclick="pickGame('ktv')" data-g="ktv"><div class="gi">🎤</div><div class="gn">KTV罚</div></div>
+    </div>
+    <div class="lob-actions">
+      <button class="btn btn-primary" id="btnStartGame" onclick="startGame()" style="flex:2;font-size:1rem;padding:0.8rem">▶ START GAME</button>
+      <button class="btn btn-ghost" id="btnAddDemo" onclick="addDemo()" style="flex:1;padding:0.8rem;font-size:0.78rem">＋加人</button>
+      <button class="btn btn-ghost" id="btnLobBack" onclick="goRoomSelect()" style="padding:0.8rem;font-size:0.78rem">← 返回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="game" class="screen">
+  <div class="g-top" style="width:100%;max-width:560px;padding:0 0.4rem;">
+    <div class="g-mode" id="gMode">—</div>
+    <div class="g-rnd" id="gRnd">RND 1</div>
+  </div>
+  <div class="turn-bar" style="width:calc(100% - 1rem);max-width:560px;">
+    <div class="t-dot"></div>
+    <span class="t-name" id="tName">—</span>
+    <span class="t-lbl" id="tLbl">// TURN</span>
+  </div>
+
+  <!-- 国王令 -->
+  <div id="uiKings" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+    <div class="k-arena" id="kArena">
+      <div class="k-ring r1"></div><div class="k-ring r2"></div>
+      <div class="k-throne" id="kThrone">
+        <div class="k-throne-icon">🎲</div>
+        <div class="k-throne-nm" id="kThroneNm">抽牌</div>
+      </div>
+    </div>
+    <div class="cmd-card" id="kCmd" style="display:none;width:calc(100% - 1rem);max-width:520px;">
+      <div class="cmd-hd" id="kCmdHd">国王令</div>
+      <div class="cmd-bd" id="kCmdBd"></div>
+      <div class="cmd-asgn" id="kCmdAsgn">在圆圈中点选两位玩家</div>
+      <div class="chips" id="kChips"></div>
+      <div style="margin-top:0.6rem;display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn-another" onclick="anotherCmd()">🔀 换一个</button>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--muted)" id="kCmdCnt"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 真心话大冒险 -->
+  <div id="uiTod" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.8rem;">
+    <div class="tod-spot">
+      <div class="spot-ring"><div class="sp-av" id="spAv">🎭</div></div>
+      <div class="sp-nm" id="spNm">—</div>
+    </div>
+    <div class="tod-btns" style="width:calc(100% - 1rem);max-width:520px;">
+      <div class="tod-btn truth" onclick="pickTod('truth')">
+        <div class="tod-bi">🔮</div><div class="tod-bl" id="todTruthLbl">真心话</div>
+      </div>
+      <div class="tod-btn dare" onclick="pickTod('dare')">
+        <div class="tod-bi">🔥</div><div class="tod-bl" id="todDareLbl">大冒险</div>
+      </div>
+    </div>
+    <div class="tod-reveal" id="todReveal" style="width:calc(100% - 1rem);max-width:520px;
+      background:linear-gradient(135deg,rgba(10,0,28,0.97),rgba(5,0,16,0.99));
+      border:1px solid rgba(255,0,153,0.22);border-radius:14px;padding:1.2rem;">
+      <div class="tod-cat" id="todCat"></div>
+      <div class="tod-text" id="todText"></div>
+      <div style="font-size:0.78rem;font-style:italic;color:var(--muted)" id="todFlav"></div>
+    </div>
+  </div>
+
+  <!-- 我从来没有 -->
+  <div id="uiNhie" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+    <div class="nhie-card" style="width:calc(100% - 1rem);max-width:520px;" id="nhieCard">
+      <div class="nhie-bdg">FROM NEVER</div>
+      <div class="nhie-stmt" id="nhieStmt">点击「抽题」揭晓…</div>
+      <div style="font-size:0.78rem;font-style:italic;color:var(--muted)" id="nhieFlav"></div>
+    </div>
+    <div class="nhie-grid" id="nhieGrid" style="max-width:520px;width:calc(100% - 1rem);"></div>
+    <div style="font-weight:700;font-size:1rem;color:var(--ng);min-height:1.4rem;" id="nhieTally"></div>
+  </div>
+
+  <!-- 二选一 -->
+  <div id="uiWyr" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+    <div class="wyr-arena" id="wyrArena" style="width:calc(100% - 1rem);max-width:520px;">
+      <div class="wyr-half A" id="wyrA" onclick="wyrVote('a')">
+        <div class="wyr-opt" id="wyrOptA">—</div><div class="wyr-pct" id="wyrPctA"></div>
+      </div>
+      <div class="wyr-or" id="wyrOrLbl">还是</div>
+      <div class="wyr-half B" id="wyrB" onclick="wyrVote('b')">
+        <div class="wyr-opt" id="wyrOptB"></div><div class="wyr-pct" id="wyrPctB"></div>
+      </div>
+    </div>
+    <div class="wyr-voters" id="wyrVoters" style="max-width:520px;width:calc(100% - 1rem);"></div>
+  </div>
+
+  <!-- 骰盅大话 -->
+  <div id="uiLiar" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.8rem;">
+    <div class="dice-stage" style="width:calc(100% - 1rem);max-width:520px;" id="diceStage">
+      <div class="dice-title">🎲 骰盅大话</div>
+      <div id="liarRules" style="font-size:0.8rem;color:var(--muted);line-height:1.7;margin-bottom:0.8rem;">
+        每人摇5颗，只看自己的，轮流喊「至少<b style="color:var(--ng)">X</b>个<b style="color:var(--ng)">Y</b>点」。<br>
+        不信对方？点<b style="color:var(--np)">开盖挑战</b>，输者喝酒。
+      </div>
+      <div id="liarBidDisplay" style="display:none;text-align:center;margin-bottom:0.6rem;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:var(--muted);margin-bottom:0.25rem;">当前喊的</div>
+        <div id="liarBidText" style="font-family:'Orbitron',sans-serif;font-size:1.8rem;color:var(--ng);font-weight:700;">—</div>
+        <div id="liarBidWho" style="font-size:0.75rem;color:var(--muted);margin-top:0.15rem;"></div>
+      </div>
+      <div style="text-align:center;margin-bottom:0.4rem;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;color:var(--muted);margin-bottom:0.35rem;" id="liarDiceLabel">点击摇骰子</div>
+        <div class="dice-roll-area" id="diceArea"></div>
+      </div>
+      <div id="liarBidControls" style="display:none;background:rgba(255,255,255,0.025);border-radius:10px;padding:0.85rem;margin-bottom:0.5rem;">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.55rem;text-align:center;">我要喊：至少 <span id="bidQtyDisplay" style="color:var(--ng);font-weight:700">1</span> 个 <span id="bidFaceDisplay" style="color:var(--ng);font-weight:700">1</span> 点</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;justify-content:center;margin-bottom:0.5rem;">
+          <button class="btn-dice" onclick="adjBid('qty',-1)">－</button>
+          <div style="text-align:center;min-width:56px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);">数量</div>
+            <div id="bidQty" style="font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;color:var(--ng);">1</div>
+          </div>
+          <button class="btn-dice" onclick="adjBid('qty',1)">＋</button>
+          <div style="width:1px;height:38px;background:rgba(255,255,255,0.07);"></div>
+          <button class="btn-dice" onclick="adjBid('face',-1)">－</button>
+          <div style="text-align:center;min-width:56px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);">点数</div>
+            <div id="bidFace" style="font-family:'Orbitron',sans-serif;font-size:1.5rem;font-weight:700;color:var(--ng);">1</div>
+          </div>
+          <button class="btn-dice" onclick="adjBid('face',1)">＋</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+          <button class="btn-dice" style="flex:2;background:rgba(0,255,204,0.12);border-color:rgba(0,255,204,0.45);color:var(--ng);" onclick="confirmBid()">✅ 喊出</button>
+          <button class="btn-dice" style="flex:1;background:rgba(255,0,153,0.1);border-color:rgba(255,0,153,0.4);color:var(--np);" onclick="liarChallenge()">😤 挑战</button>
+        </div>
+      </div>
+      <div id="liarPlayerRow" style="display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:center;"></div>
+      <div id="liarReveal" style="display:none;padding:0.9rem;border-radius:10px;background:rgba(255,0,153,0.07);border:1px solid rgba(255,0,153,0.18);margin-top:0.45rem;">
+        <div id="liarRevealText" style="font-size:1rem;line-height:1.7;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 划拳 -->
+  <div id="uiFist" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+    <div class="fist-card">
+      <div class="fist-title" id="fistTitleLbl" style="margin-bottom:0.8rem;">✊ 划拳对决</div>
+      <div id="fistSteps" style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;gap:0.28rem;"><div class="fstep-dot active" id="fdot1"></div><span class="fstep-lbl active" id="flbl1" id="fStepLbl1">选对手</span></div>
+        <div style="width:22px;height:1px;background:rgba(255,255,255,0.08);"></div>
+        <div style="display:flex;align-items:center;gap:0.28rem;"><div class="fstep-dot" id="fdot2"></div><span class="fstep-lbl" id="flbl2"><span id="fStepLbl2">出拳</span></span></div>
+        <div style="width:22px;height:1px;background:rgba(255,255,255,0.08);"></div>
+        <div style="display:flex;align-items:center;gap:0.28rem;"><div class="fstep-dot" id="fdot3"></div><span class="fstep-lbl" id="flbl3"><span id="fStepLbl3">揭晓</span></span></div>
+      </div>
+      <div id="fPhase1">
+        <div style="text-align:center;margin-bottom:0.7rem;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--nc);">选择对手</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">谁来接受 <span id="fChallName" style="color:var(--np);"></span> 的挑战？</div>
+        </div>
+        <div id="fOpponentGrid" style="display:flex;flex-wrap:wrap;gap:0.45rem;justify-content:center;"></div>
+      </div>
+      <div id="fPhase2" style="display:none;">
+        <div style="background:rgba(123,47,255,0.06);border:1px solid rgba(123,47,255,0.18);border-radius:9px;padding:0.55rem 0.7rem;margin-bottom:0.8rem;font-size:0.78rem;color:var(--muted);line-height:1.6;text-align:center;">
+          ✊石头 > ✌️剪刀 > ✋布 > ✊石头 &nbsp;|&nbsp; <span style="color:var(--ng);">喊数字(0-10)</span>，出拳之和猜中者赢
+        </div>
+        <div id="fP1Zone" style="margin-bottom:0.7rem;">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
+            <span id="fP1Av" style="font-size:1.4rem;"></span>
+            <span id="fP1Nm" style="font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--np);"></span>
+            <span style="font-size:0.7rem;color:var(--muted);">（对方不要看）</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;justify-content:center;">
+            <div class="fist-choice2" id="fc1_rock" onclick="selectHand(1,'rock')"><div>✊</div><span>石头</span></div>
+            <div class="fist-choice2" id="fc1_paper" onclick="selectHand(1,'paper')"><div>✋</div><span>布</span></div>
+            <div class="fist-choice2" id="fc1_scissors" onclick="selectHand(1,'scissors')"><div>✌️</div><span>剪刀</span></div>
+          </div>
+          <div style="margin-top:0.45rem;display:flex;gap:0.45rem;align-items:center;justify-content:center;">
+            <span style="font-size:0.78rem;color:var(--muted);">喊：</span>
+            <button class="fnum-btn" onclick="adjCall(1,-1)">－</button>
+            <span id="fCall1Num" style="font-family:'Share Tech Mono',monospace;font-size:1.3rem;color:var(--np);min-width:26px;text-align:center;">5</span>
+            <button class="fnum-btn" onclick="adjCall(1,1)">＋</button>
+          </div>
+          <div style="text-align:center;margin-top:0.5rem;">
+            <button id="fP1Confirm" onclick="confirmHand(1)" disabled
+              style="background:rgba(255,0,153,0.12);border:1.5px solid rgba(255,0,153,0.35);color:var(--np);
+              border-radius:9px;padding:0.55rem 1.3rem;font-size:0.88rem;font-weight:700;cursor:pointer;
+              font-family:'Orbitron',sans-serif;opacity:0.4;letter-spacing:0.06em;">已选好 →</button>
+          </div>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.06);margin:0.2rem 0 0.7rem;"></div>
+        <div id="fP2Zone" style="opacity:0.35;pointer-events:none;">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
+            <span id="fP2Av" style="font-size:1.4rem;"></span>
+            <span id="fP2Nm" style="font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--nc);"></span>
+          </div>
+          <div style="display:flex;gap:0.5rem;justify-content:center;">
+            <div class="fist-choice2" id="fc2_rock" onclick="selectHand(2,'rock')"><div>✊</div><span>石头</span></div>
+            <div class="fist-choice2" id="fc2_paper" onclick="selectHand(2,'paper')"><div>✋</div><span>布</span></div>
+            <div class="fist-choice2" id="fc2_scissors" onclick="selectHand(2,'scissors')"><div>✌️</div><span>剪刀</span></div>
+          </div>
+          <div style="margin-top:0.45rem;display:flex;gap:0.45rem;align-items:center;justify-content:center;">
+            <span style="font-size:0.78rem;color:var(--muted);">喊：</span>
+            <button class="fnum-btn" onclick="adjCall(2,-1)">－</button>
+            <span id="fCall2Num" style="font-family:'Share Tech Mono',monospace;font-size:1.3rem;color:var(--nc);min-width:26px;text-align:center;">5</span>
+            <button class="fnum-btn" onclick="adjCall(2,1)">＋</button>
+          </div>
+          <div style="text-align:center;margin-top:0.5rem;">
+            <button id="fP2Confirm" onclick="confirmHand(2)" disabled
+              style="background:rgba(0,255,204,0.1);border:1.5px solid rgba(0,255,204,0.28);color:var(--ng);
+              border-radius:9px;padding:0.55rem 1.3rem;font-size:0.88rem;font-weight:700;cursor:pointer;
+              font-family:'Orbitron',sans-serif;opacity:0.4;letter-spacing:0.06em;">确认出拳</button>
+          </div>
+        </div>
+      </div>
+      <div id="fPhase3" style="display:none;text-align:center;">
+        <div id="fResultVs" style="display:flex;gap:1.4rem;align-items:center;justify-content:center;margin-bottom:0.9rem;"></div>
+        <div id="fResultText" style="font-family:'Orbitron',sans-serif;font-size:1.4rem;margin-bottom:0.4rem;"></div>
+        <div id="fResultSub" style="font-size:0.82rem;color:var(--muted);margin-bottom:0.9rem;line-height:1.6;"></div>
+        <button onclick="fistRematch()" style="background:rgba(123,47,255,0.12);border:1px solid rgba(123,47,255,0.35);color:#c090ff;border-radius:9px;padding:0.55rem 1.1rem;font-size:0.85rem;cursor:pointer;font-family:'Orbitron',sans-serif;">🔄 再来一局</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KTV -->
+  <div id="uiKtv" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+    <div class="ktv-card" style="width:calc(100% - 1rem);max-width:520px;" id="ktvCard">
+      <div class="ktv-icon" id="ktvIcon">🎤</div>
+      <div class="ktv-title" id="ktvTitle">KTV 罚唱</div>
+      <div class="ktv-task" id="ktvTask">点击「抽题」</div>
+      <div class="ktv-sub" id="ktvSub"></div>
+      <div id="ktvPlayers" style="margin-top:0.5rem;"></div>
+    </div>
+  </div>
+
+  <!-- 🃏 红黑牌 – Phase 1: Vote -->
+  <div id="uiRnp" style="width:100%;max-width:560px;display:none;flex-direction:column;align-items:center;gap:0.7rem;">
+
+    <!-- Phase 1 -->
+    <div class="rnp-phase" id="rnpPhase1">
+      <div class="rnp-q-card">
+        <div class="rnp-q-label" id="rnpQLabel2">// 红黑牌题目</div>
+        <div class="rnp-q-text" id="rnpQText">等待出题…</div>
+        <div class="rnp-q-num" id="rnpQNum"></div>
+      </div>
+      <div class="rnp-timer-bar"><div class="rnp-timer-fill" id="rnpTimerFill" style="width:100%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:0.6rem;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);" id="rnpTimerLbl">30s</span>
+        <span style="font-size:0.7rem;color:var(--muted);" id="rnpVotedCnt">0 / 0 已出牌</span>
+      </div>
+      <div class="rnp-chip-row" id="rnpChips1"></div>
+      <div id="rnpMyVoteArea">
+        <div style="font-size:0.78rem;color:var(--muted);text-align:center;margin-bottom:0.45rem;" id="rnpMyLbl">你的选择</div>
+        <div class="rnp-vote-row">
+          <div class="rnp-vbtn red" id="rnpBtnR" onclick="castVote('red')">
+            <div class="vi">🟥</div><div class="vl" id="rnpVoteBtnRLbl">红牌</div><div class="vs" id="rnpVoteSubRLbl">做过 / 符合</div>
+          </div>
+          <div class="rnp-vbtn blk" id="rnpBtnB" onclick="castVote('black')">
+            <div class="vi">⬛</div><div class="vl" id="rnpVoteBtnBLbl">黑牌</div><div class="vs" id="rnpVoteSubBLbl">没做过 / 不符合</div>
+          </div>
+        </div>
+      </div>
+      <div id="rnpVotedMsg" style="display:none;text-align:center;padding:0.6rem;
+        font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--ng);letter-spacing:0.12em;">
+        ✓ 已锁定 // 等待全员出牌
+      </div>
+      <button onclick="rnpEndVoting()" id="rnpEndBtn"
+        style="margin-top:0.6rem;width:100%;background:rgba(0,255,204,0.1);
+        border:1px solid rgba(0,255,204,0.3);color:var(--ng);border-radius:8px;
+        padding:0.65rem;font-size:0.85rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:0.09em;">
+        全员出牌 → 进入猜牌阶段
+      </button>
+    </div>
+
+    <!-- Phase 2: Guess total + P2P betting -->
+    <div class="rnp-phase" id="rnpPhase2" style="display:none;">
+      <div class="rnp-q-card" style="font-size:0.9rem;opacity:0.75;">
+        <div class="rnp-q-text" id="rnpQEcho"></div>
+      </div>
+      <div class="rnp-phase2-inner">
+
+        <!-- Section A: guess total reds -->
+        <div class="rnp-section">
+          <div class="rnp-section-hd pink">① 猜场上几张红牌？</div>
+          <div class="rnp-tg-grid" id="rnpTgGrid"></div>
+          <button onclick="rnpRevealTotal()" id="rnpRevealTotalBtn"
+            style="width:100%;margin-top:0.7rem;background:rgba(255,0,153,0.1);
+            border:1.5px solid rgba(255,0,153,0.38);color:var(--np);border-radius:8px;
+            padding:0.6rem;font-size:0.82rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:0.07em;">
+            🔓 揭晓红牌总数
+          </button>
+          <div id="rnpRevealBox" style="display:none;margin-top:0.6rem;" class="rnp-reveal-box">
+            <div class="rnp-total-big" id="rnpTotalBig">0</div>
+            <div class="rnp-voter-reveal" id="rnpVoterReveal"></div>
+            <div class="rnp-penalty-line" id="rnpPenaltyLine"></div>
+          </div>
+        </div>
+
+        <!-- Section B: open bet page -->
+        <div class="rnp-section" id="rnpBetSection" style="display:none;">
+          <div class="rnp-section-hd purple">② 个人买卖</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.7rem;line-height:1.7;">
+            发起买卖 → 对方出价接受 → 你猜颜色 → 双方弹窗结算<br>
+            <span style="color:rgba(0,255,204,0.6)">被猜过的人结果只有双方知道 🤫</span>
+          </div>
+          <div id="rnpHistorySection" style="display:none;margin-bottom:0.7rem;">
+            <div class="rnp-section-hd teal" style="margin-bottom:0.35rem;font-size:0.58rem;">猜牌记录 // 只有当事人知道结果</div>
+            <div class="rnp-history" id="rnpHistoryList"></div>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button onclick="openBetPage()" id="rnpOpenBetBtn"
+              style="flex:2;background:rgba(123,47,255,0.12);border:1.5px solid rgba(123,47,255,0.4);
+              color:#c090ff;border-radius:8px;padding:0.7rem;font-size:0.88rem;cursor:pointer;
+              font-family:'Orbitron',sans-serif;letter-spacing:0.07em;">
+              🃏 进入买卖房间
+            </button>
+            <button onclick="rnpDoneBetting()"
+              style="flex:1;background:rgba(0,255,204,0.06);border:1px solid rgba(0,255,204,0.2);
+              color:var(--ng);border-radius:8px;padding:0.7rem;font-size:0.82rem;cursor:pointer;
+              font-family:'Orbitron',sans-serif;">
+              我不猜了
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Act bar -->
+  <div class="act-bar" style="width:calc(100% - 1rem);max-width:560px;">
+    <button class="btn btn-primary" id="btnDraw" onclick="doDraw()" style="flex:2;font-size:1rem;padding:0.82rem">▶ 抽题</button>
+    <button class="btn btn-teal" id="btnNext" onclick="nextTurn()" style="flex:2;font-size:1rem;padding:0.82rem;display:none">NEXT →</button>
+    <button class="btn btn-ghost" id="btnExitGame" onclick="goLobby()">EXIT</button>
+  </div>
+  <div class="rxn-bar" id="rxnBar" style="display:none;">
+    <div class="rxn-btn" onclick="react('😂')">😂<span class="rxn-cnt" id="rc0"></span></div>
+    <div class="rxn-btn" onclick="react('🔥')">🔥<span class="rxn-cnt" id="rc1"></span></div>
+    <div class="rxn-btn" onclick="react('💀')">💀<span class="rxn-cnt" id="rc2"></span></div>
+    <div class="rxn-btn" onclick="react('❤️‍🔥')">❤️‍🔥<span class="rxn-cnt" id="rc3"></span></div>
+    <div class="rxn-btn" onclick="react('🫣')">🫣<span class="rxn-cnt" id="rc4"></span></div>
+    <div class="rxn-btn" onclick="react('🍺')">🍺<span class="rxn-cnt" id="rc5"></span></div>
+  </div>
+  <div class="feed-section" id="feedSection" style="display:none;padding:0 0.5rem;">
+    <div class="feed-hd">
+      <span class="feed-ttl" id="feedTitleLbl">📡 TONIGHT_LOG</span>
+      <div style="display:flex;gap:0.45rem;align-items:center;">
+        <button class="board-btn" id="feedScoreBtn" onclick="showBoard()">🏆 SCORE</button>
+        <span class="feed-clear" id="feedClearBtn" onclick="clearFeed()">CLR</span>
+      </div>
+    </div>
+    <div class="feed-scroll" id="feedScroll"></div>
+  </div>
+</div>
+
+<!-- ══ 红黑牌买卖全屏页 ══ -->
+<div id="betPage" style="display:none;position:fixed;inset:0;z-index:600;
+  background:var(--bg);overflow-y:auto;flex-direction:column;align-items:center;">
+
+  <!-- Header -->
+  <div style="width:100%;max-width:520px;padding:1rem 1rem 0;display:flex;align-items:center;gap:0.7rem;position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0.7rem;">
+    <button onclick="closeBetPage()" style="background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--muted);font-size:0.78rem;padding:0.35rem 0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;">← 返回</button>
+    <div style="flex:1;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c090ff;letter-spacing:0.1em;">🃏 个人买卖</div>
+      <div style="font-size:0.62rem;color:var(--muted);font-family:'Share Tech Mono',monospace;" id="bpQLabel">— 题目 —</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:var(--ng);" id="bpRound">—</div>
+      <div style="font-size:0.6rem;color:var(--muted);font-family:'Share Tech Mono',monospace;" id="bpRemaining">—</div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:520px;padding:1rem;">
+
+    <!-- Sub-state: PICK TARGET -->
+    <div id="bpStatePick">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:var(--nc);margin-bottom:0.6rem;"><span id="bpPickLbl2">// 选择你想猜的人</span></div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.8rem;line-height:1.6;"><span id="bpPickSub2">灰色 = 已被猜过，不可再选</span></div>
+      <div id="bpTargetGrid" style="display:flex;flex-wrap:wrap;gap:0.6rem;justify-content:center;margin-bottom:1rem;"></div>
+      <button id="bpNoGuessBtn" onclick="closeBetPage()" style="width:100%;background:rgba(0,255,204,0.06);border:1px solid rgba(0,255,204,0.2);
+        color:var(--ng);border-radius:8px;padding:0.7rem;font-size:0.85rem;cursor:pointer;
+        font-family:'Orbitron',sans-serif;">我不猜了 → 返回</button>
+    </div>
+
+    <!-- Sub-state: SET STAKE (after picking target) -->
+    <div id="bpStateStake" style="display:none;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:var(--nc);margin-bottom:0.7rem;">// 向对方发起买卖</div>
+      <div style="display:flex;align-items:center;gap:0.8rem;padding:1rem;border-radius:12px;
+        background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);margin-bottom:1rem;">
+        <span id="bpFromAv" style="font-size:2.5rem;"></span>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--np);" id="bpFromName">—</div>
+          <div style="font-size:0.7rem;color:var(--muted);">想猜</div>
+        </div>
+        <div style="font-size:1.5rem;color:var(--muted);">→</div>
+        <span id="bpTargetAv" style="font-size:2.5rem;"></span>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--nc);" id="bpTargetName">—</div>
+          <div style="font-size:0.7rem;color:var(--muted);">出的是什么牌？</div>
+        </div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--ng);margin-bottom:0.5rem;letter-spacing:0.15em;">我愿意付出的赌注</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.7rem;line-height:1.6;">
+          猜对 → 对方喝这么多&nbsp;|&nbsp;猜错 → 我喝这么多
+        </div>
+        <!-- Beer icons stake selector -->
+        <div id="bpStakeIcons" style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.5rem;"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem;">
+          <button onclick="adjBpStake(-1)" style="width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.04);color:var(--txt);font-size:1.1rem;cursor:pointer;">－</button>
+          <span id="bpStakeNum" style="font-family:'Orbitron',sans-serif;font-size:1.8rem;color:var(--ng);min-width:36px;text-align:center;">1</span>
+          <button onclick="adjBpStake(1)" style="width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.04);color:var(--txt);font-size:1.1rem;cursor:pointer;">＋</button>
+          <span style="font-size:0.78rem;color:var(--muted);margin-left:0.3rem;">杯</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.6rem;">
+        <button onclick="sendBetOffer()" style="flex:2;background:rgba(255,0,153,0.14);border:1.5px solid rgba(255,0,153,0.45);
+          color:var(--np);border-radius:10px;padding:0.85rem;font-size:0.92rem;cursor:pointer;
+          font-family:'Orbitron',sans-serif;letter-spacing:0.07em;">📤 发起买卖</button>
+        <button onclick="cancelBpTarget()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.12);
+          color:var(--muted);border-radius:10px;padding:0.85rem;font-size:0.82rem;cursor:pointer;
+          font-family:'Share Tech Mono',monospace;">取消</button>
+      </div>
+    </div>
+
+    <!-- Sub-state: WAITING (shown to initiator while target decides) -->
+    <div id="bpStateWaiting" style="display:none;text-align:center;padding:2rem 1rem;">
+      <div style="font-size:3rem;margin-bottom:0.7rem;animation:pulseDot 1.2s ease infinite;">⏳</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:var(--ng);margin-bottom:0.4rem;">等待对方回应…</div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1.5rem;" id="bpWaitMsg">—</div>
+      <div style="background:rgba(255,255,255,0.025);border-radius:10px;border:1px solid rgba(255,255,255,0.06);
+        padding:0.9rem;margin-bottom:1.2rem;font-size:0.88rem;line-height:1.7;" id="bpWaitDetail"></div>
+      <button onclick="cancelBetOffer()" style="background:transparent;border:1px solid rgba(255,0,153,0.25);
+        color:rgba(255,0,153,0.6);border-radius:8px;padding:0.6rem 1.2rem;font-size:0.8rem;cursor:pointer;
+        font-family:'Orbitron',sans-serif;">撤回买卖</button>
+    </div>
+
+    <!-- Sub-state: INCOMING (shown to target after offer arrives) -->
+    <div id="bpStateIncoming" style="display:none;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:var(--no);margin-bottom:0.7rem;">// 收到买卖邀约</div>
+      <div style="background:rgba(255,221,0,0.06);border:1.5px solid rgba(255,221,0,0.25);border-radius:12px;
+        padding:1.1rem;margin-bottom:1rem;" id="bpIncomingCard">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">
+          <span id="bpIncFromAv" style="font-size:2rem;"></span>
+          <div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:var(--np);" id="bpIncFromName">—</div>
+            <div style="font-size:0.72rem;color:var(--muted);">想猜你出的是红牌还是黑牌</div>
+          </div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">赌注出价</div>
+        <div id="bpIncStakeIcons" style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.45rem;"></div>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.6;">
+          对方猜对 → <span style="color:var(--np);">你喝这些</span>&nbsp;|&nbsp;对方猜错 → <span style="color:var(--ng);">对方喝这些</span>
+        </div>
+      </div>
+      <!-- Counter-offer stake -->
+      <div style="margin-bottom:0.9rem;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--ng);margin-bottom:0.45rem;letter-spacing:0.12em;">你可以修改赌注（不接受直接拒绝）</div>
+        <div id="bpCounterIcons" style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.4rem;"></div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button onclick="adjBpCounter(-1)" style="width:32px;height:32px;border-radius:7px;border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.04);color:var(--txt);font-size:1rem;cursor:pointer;">－</button>
+          <span id="bpCounterNum" style="font-family:'Orbitron',sans-serif;font-size:1.6rem;color:var(--ng);min-width:32px;text-align:center;">1</span>
+          <button onclick="adjBpCounter(1)" style="width:32px;height:32px;border-radius:7px;border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.04);color:var(--txt);font-size:1rem;cursor:pointer;">＋</button>
+          <span style="font-size:0.75rem;color:var(--muted);margin-left:0.3rem;">杯</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.6rem;">
+        <button onclick="acceptBpOffer()" style="flex:2;background:rgba(0,255,204,0.12);border:1.5px solid rgba(0,255,204,0.4);
+          color:var(--ng);border-radius:10px;padding:0.85rem;font-size:0.92rem;cursor:pointer;
+          font-family:'Orbitron',sans-serif;letter-spacing:0.07em;">✅ 接受</button>
+        <button onclick="declineBpOffer()" style="flex:1;background:transparent;border:1px solid rgba(255,0,153,0.25);
+          color:rgba(255,0,153,0.6);border-radius:10px;padding:0.85rem;font-size:0.82rem;cursor:pointer;
+          font-family:'Orbitron',sans-serif;">拒绝</button>
+      </div>
+    </div>
+
+    <!-- Sub-state: GUESS (initiator picks red/black after offer accepted) -->
+    <div id="bpStateGuess" style="display:none;text-align:center;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;color:var(--np);margin-bottom:0.9rem;">// 对方接受了！现在猜颜色</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.7rem;margin-bottom:0.6rem;">
+        <span id="bpGuessTargetAv" style="font-size:2rem;"></span>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:var(--nc);" id="bpGuessTargetName">—</div>
+          <div style="font-size:0.7rem;color:var(--muted);">出的是？</div>
+        </div>
+      </div>
+      <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;" id="bpGuessStakeLine">赌注：—</div>
+      <div style="display:flex;gap:1rem;justify-content:center;">
+        <div onclick="submitGuess('red')"
+          style="flex:1;max-width:140px;padding:1.5rem 1rem;border-radius:14px;border:2px solid rgba(200,0,30,0.35);
+          background:rgba(200,0,30,0.08);cursor:pointer;transition:all 0.2s;user-select:none;"
+          onmouseover="this.style.background='rgba(200,0,30,0.2)'" onmouseout="this.style.background='rgba(200,0,30,0.08)'">
+          <div style="font-size:3rem;margin-bottom:0.4rem;">🟥</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:#ff4444;letter-spacing:0.1em;">红牌</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:0.2rem;">做过 / 符合</div>
+        </div>
+        <div onclick="submitGuess('black')"
+          style="flex:1;max-width:140px;padding:1.5rem 1rem;border-radius:14px;border:2px solid rgba(180,180,180,0.2);
+          background:rgba(200,200,200,0.04);cursor:pointer;transition:all 0.2s;user-select:none;"
+          onmouseover="this.style.background='rgba(200,200,200,0.1)'" onmouseout="this.style.background='rgba(200,200,200,0.04)'">
+          <div style="font-size:3rem;margin-bottom:0.4rem;">⬛</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:#bbb;letter-spacing:0.1em;">黑牌</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:0.2rem;">没做过 / 不符合</div>
+        </div>
+      </div>
+      <button onclick="chickOutGuess()" style="margin-top:1.2rem;background:transparent;
+        border:1px solid rgba(255,221,0,0.2);color:rgba(255,221,0,0.5);border-radius:8px;
+        padding:0.6rem 1.2rem;font-size:0.78rem;cursor:pointer;font-family:'Noto Sans SC',sans-serif;">
+        🐔 放弃这次猜测（算我输）
+      </button>
+    </div>
+
+  </div><!-- end inner -->
+
+  <!-- History log at bottom -->
+  <div id="bpHistoryWrap" style="width:100%;max-width:520px;padding:0 1rem 2rem;display:none;">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;
+      color:var(--ng);margin-bottom:0.4rem;opacity:0.7;">猜牌记录 // 只有当事人知道</div>
+    <div id="bpHistoryList" style="display:flex;flex-direction:column;gap:0.3rem;"></div>
+    <div style="height:0.5rem;"></div>
+    <!-- Done: next question -->
+    <div id="bpAllDoneBar" style="display:none;margin-top:0.8rem;">
+      <div style="font-size:0.8rem;color:var(--ng);text-align:center;margin-bottom:0.6rem;
+        font-family:'Share Tech Mono',monospace;">// 无人可猜，进入下一题</div>
+      <button onclick="rnpDoneBetting()" style="width:100%;background:linear-gradient(135deg,rgba(0,255,204,0.15),rgba(0,255,204,0.06));
+        border:1.5px solid var(--ng);color:var(--ng);border-radius:10px;padding:0.85rem;
+        font-size:0.95rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:0.08em;">
+        → 下一题
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Bet reveal modal (for both parties) -->
+<div id="betRevealModal" style="display:none;position:fixed;inset:0;z-index:800;
+  background:rgba(5,0,16,0.96);backdrop-filter:blur(12px);
+  flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;">
+  <div style="width:100%;max-width:400px;">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.25em;
+      color:var(--muted);margin-bottom:0.8rem;"><span id="brmTitleLbl">// 买卖结算</span></div>
+    <!-- Versus row -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:1.2rem;margin-bottom:1rem;">
+      <div style="text-align:center;">
+        <div style="font-size:2.8rem;" id="brmFromAv">🎮</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--np);" id="brmFromName">—</div>
+        <div style="font-size:0.65rem;color:var(--muted);" id="brmGuesserLbl">猜测者</div>
+      </div>
+      <div style="font-size:1.4rem;color:var(--muted);">🆚</div>
+      <div style="text-align:center;">
+        <div style="font-size:2.8rem;" id="brmTargetAv">🎭</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--nc);" id="brmTargetName">—</div>
+        <div style="font-size:0.65rem;color:var(--muted);" id="brmTargetLbl">被猜者</div>
+      </div>
+    </div>
+    <!-- Cards: guess vs actual -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;">
+      <div style="text-align:center;">
+        <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.35rem;font-family:'Share Tech Mono',monospace;" id="brmGuessLbl2">猜测</div>
+        <div id="brmGuessCard" style="width:72px;height:100px;border-radius:12px;margin:0 auto;
+          display:flex;align-items:center;justify-content:center;font-size:2.5rem;border:2px solid;"></div>
+      </div>
+      <div style="font-size:1.6rem;color:var(--muted);">→</div>
+      <div style="text-align:center;">
+        <div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.35rem;font-family:'Share Tech Mono',monospace;" id="brmActualLbl2">实际</div>
+        <div id="brmActualCard" style="width:72px;height:100px;border-radius:12px;margin:0 auto;
+          display:flex;align-items:center;justify-content:center;font-size:2.5rem;border:2px solid;"></div>
+      </div>
+    </div>
+    <!-- Result verdict -->
+    <div id="brmVerdict" style="font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;
+      margin-bottom:0.4rem;"></div>
+    <div id="brmDrink" style="font-size:1.05rem;line-height:1.7;margin-bottom:1.5rem;"></div>
+    <button id="brmContinueBtn" onclick="closeBetReveal()" style="background:linear-gradient(135deg,rgba(0,255,204,0.14),rgba(0,255,204,0.06));
+      border:1.5px solid var(--ng);color:var(--ng);border-radius:10px;padding:0.75rem 2rem;
+      font-size:0.92rem;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:0.07em;
+      width:100%;">继续猜</button>
+  </div>
+</div>
+
+<!-- Offline anchor -->
+<div class="offline-anchor" id="oaOverlay">
+  <div class="oa-icon" id="oaIcon">🎯</div>
+  <div class="oa-title" id="oaTitle">// 放下手机</div>
+  <div class="oa-instruct" id="oaInstruct"></div>
+  <div class="oa-hint" id="oaHint"></div>
+  <div id="oaTimerWrap" style="display:none;margin-bottom:1rem;"><div class="oa-timer" id="oaTimer">30</div></div>
+  <div class="oa-btns">
+    <button class="btn-did" id="oaDoneBtn" onclick="markDone()">✅ 完成</button>
+    <button class="btn-chicken" id="oaChickenBtn" onclick="markChicken()">🐔 认怂</button>
+  </div>
+</div>
+
+<!-- Your turn -->
+<div class="yt-blast" id="ytBlast" onclick="dismissBlast()">
+  <div class="yt-av" id="ytAv" style="animation:ytBounce 0.6s ease">🎮</div>
+  <div class="yt-lbl" id="ytLblEl" style="margin-top:0.4rem;">你的回合</div>
+  <div class="yt-name" id="ytName" style="animation:ytBounce 0.7s 0.1s both;">—</div>
+  <div class="yt-sub" id="ytSub">TAP TO CONTINUE_</div>
+</div>
+
+<!-- Board -->
+<div class="board-overlay" id="boardOverlay">
+  <div class="board-ttl" id="boardTtl">SCOREBOARD</div>
+  <div class="board-sub" id="boardSub2">WINNERS · LOSERS · LEGENDS</div>
+  <div class="board-list" id="boardList"></div>
+  <button class="btn btn-ghost" id="boardCloseBtn" onclick="hideBoard()" style="padding:0.65rem 1.8rem;">CLOSE</button>
+</div>
+
+<!-- Loader -->
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-txt" id="loaderTxt">AI_DM PROCESSING...</div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   AVATARS
+════════════════════════════════════ */
+const ALL_AVS=[
+  '🤖','👾','🎮','🕹️','💿','📡','⚡','🔮','💎','🎯',
+  '🚀','💀','🌀','🔥','🦾','🧬','🦊','🐺','🐲','🌙',
+  '🎪','🎭','🎨','🎸','🎲','🏴‍☠️','👁️','🌊','🦋','🎋'
+];
+const DEMO_NAMES=['NPC小王','系统崩溃','断线重连','玩家一号','404未找到','外挂被封','主机过热','卡帧了','氪金玩家','掉线重试'];
+
+/* ════════════════════════════════════
+   PROMPT BANKS
+════════════════════════════════════ */
+const BANKS={
+kings:[
+  "A给B做10秒颈部按摩，B全程不能出声。",
+  "A闭眼，B在A手心写一个字，猜错A喝，猜对B喝。",
+  "A和B背靠背，倒数5秒后同时转身，先笑的人喝酒。",
+  "A和B面对面30秒对视不许眨眼，先眨眼的喝酒。",
+  "A用一根手指点B身上任意一处，B猜是哪里——猜错喝酒。",
+  "A帮B拍一张好看的照片，B决定要不要发朋友圈。",
+  "A模仿B今晚说过的一句话，全场判断像不像——不像A喝。",
+  "A和B交换一样随身物品，保持到本轮结束。",
+  "A拉着B的手30秒不能松，期间正常聊天。",
+  "A凑近B耳边说一句只有B能听到的悄悄话。",
+  "A当众宣布：今晚最想和谁独处？",
+  "A指出在场某人今晚让你印象深刻的一个细节。",
+  "A给在场每人一个角色标签：谁是「暗藏心机」？",
+  "A宣布今晚谁最可能先喝挂，理由说出来。",
+  "A说出今晚最想多聊几句但一直没机会的人。",
+  "A告诉B：你今天有一个动作让我多看了你一眼，是什么。",
+  "A宣布：今晚只剩一瓶酒，你选和谁分着喝？",
+  "B解锁手机交给A，A看任意一个聊天，大声念第一条消息。",
+  "A替B给手机里第三个联系人发一个表情包（全场选内容）。",
+  "B打开相册，A随机点一张，B讲故事。",
+  "A给B用肢体表演一个表情包，B猜——猜错B喝。",
+  "A为B即兴写一句「今晚最想说给你听的话」，B打分。",
+  "A和B合唱任意一首歌的副歌，没人鼓掌两人各喝一杯。",
+  "A对B说：认识你之后有一件事我改变了。",
+  "A当众说出今晚让你觉得值得出门的一件事。",
+],
+tod_truth:[
+  "今晚在场的人，最想单独再约谁？",
+  "你现在有没有暧昧对象？几个？",
+  "最近有没有对某人心动但没表现出来？",
+  "你今晚有没有对某人多看了几眼？",
+  "你现在手机里有没有没回的消息，是谁的？",
+  "如果今晚必须和在场某人接吻，你选谁？",
+  "你有没有喜欢过自己的朋友的另一半？",
+  "你发过最肉麻的消息，对方是谁？结果怎样了？",
+  "你上段感情是怎么结束的？谁先提的？",
+  "你最近一次翻前任朋友圈是什么时候？",
+  "你有没有复合过？值不值得？",
+  "给今晚在场每人打一个心机指数1-10分。",
+  "在场谁你觉得今晚喝多最容易失控？",
+  "你觉得今晚谁对谁有意思，说出来。",
+  "你最不想让今晚哪个人知道你的什么事？",
+  "你最近一次哭是因为什么？",
+  "你今晚有没有一句话想说但憋着没说？现在说。",
+  "你喝酒后会变成什么类型的人？有人见过吗？",
+  "你上次主动找人倾诉是多久前的事？",
+],
+tod_dare:[
+  "给你最近联系的人发语音「最近有点想你」，外放。",
+  "打开微信「附近的人」展示给全场看。",
+  "给你前任发「在吗」，等3分钟，读回复给全场听。",
+  "打开相册，最新10张展示给右边的人。",
+  "当场打开你收藏的表情包，挑一个读使用场景。",
+  "念出手机里你觉得最土的备注名是谁。",
+  "用最深情的眼神盯着右边的人说：「你今晚真好看。」",
+  "站起来，走到你今晚最想接近的人面前，摸一下他/她的手。",
+  "抱一下今晚你觉得最需要被抱的人。",
+  "给全场一人一句今晚的「最」——最可爱、最神秘……",
+  "用3秒模仿今晚某人说话的语气，全场猜。",
+  "唱任意一首歌的高音部分，低于6分喝酒。",
+  "对着全场做一个30秒即兴脱口秀：今晚最怕被问的问题。",
+  "给你暗恋的人发一个表情包（全场投票选），读回复。",
+  "在桌上留手写小纸条，写给今晚你最想说话的人，折好交给他/她。",
+],
+nhie:[
+  "我从来没有喜欢过今晚在场的某人。",
+  "我从来没有给人发过秒回但等了10分钟才发的消息。",
+  "我从来没有在暗恋一个人时研究过他/她喜欢什么类型。",
+  "我从来没有约会时偷偷照过镜子调整自己。",
+  "我从来没有因为在意某人而故意路过他/她常去的地方。",
+  "我从来没有同时和两个人暧昧，让两边都觉得有戏。",
+  "我从来没有分手后主动找过前任。",
+  "我从来没有换了账号去看拉黑我的人的动态。",
+  "我从来没有在前任官宣新恋情那天多喝了几杯。",
+  "我从来没有在朋友圈设过分组可见，只给某人看。",
+  "我从来没有喝酒说了清醒时不会说的话，然后假装不记得。",
+  "我从来没有在聚会上假装开心，但心思完全不在。",
+  "我从来没有在背后说过今晚在场某人的坏话。",
+  "我从来没有在酒桌上答应过一件根本没打算做的事。",
+  "我从来没有因为看到某人的朋友圈睡不着。",
+  "我从来没有发过一条朋友圈是专门为了让某人看见的。",
+  "我从来没有明明不想去但还是赴约，全程在期待结束。",
+  "我从来没有对人说「没事」但其实有事。",
+],
+wyr:[
+  {a:"今晚相册翻3分钟",b:"当众喊出你现在暗恋的人名字"},
+  {a:"喜欢的人知道你喜欢他，但没反应",b:"你喜欢的人不知道，你也不知道对方是否喜欢你"},
+  {a:"知道今晚在场每人对你的真实评价",b:"他们永远不知道你对他们的评价"},
+  {a:"下一任恋人是今晚在场某人",b:"今晚是你们最后一次见面"},
+  {a:"永远只能喝到微醺",b:"喝酒必须喝到真醉才有感觉"},
+  {a:"你今晚说的每句话都被录音发给你最在意的人",b:"你今晚的每个表情都被拍下来发朋友圈"},
+  {a:"把你最后一段删掉没发的消息念给全场",b:"把你最后悔发出去的消息截图给全场看"},
+  {a:"今晚和你最不熟的人交换手机密码",b:"今晚一周内的聊天记录大屏展示"},
+  {a:"今晚做东请全场，大家记你一辈子",b:"今晚AA，轮到你结账时假装找不到手机"},
+  {a:"今晚喜欢你的人主动告白",b:"今晚你喜欢的人和别人在一起了"},
+  {a:"提前知道每段感情的结局",b:"永远不知道，但每次都全力以赴"},
+  {a:"永远有人追你但你都不喜欢",b:"你喜欢的人都不追你"},
+  {a:"永远被人需要但不被珍惜",b:"永远被人珍惜但不被需要"},
+  {a:"今晚让全场帮你回一条消息",b:"今晚让全场帮你删一个联系人"},
+],
+ktv:[
+  {icon:"🎤",task:"哼旋律不唱词，让全场猜歌名——30秒猜不出你喝酒。",sub:"越冷门越难",offline:"放下手机，开哼！"},
+  {icon:"🎵",task:"和左边的人歌词接龙，同一首歌一人一句，接断了喝酒。",sub:"不能编",offline:"放下手机，开始！"},
+  {icon:"🎶",task:"全场一起唱任意一首歌的副歌，唱错词的人喝酒。",sub:"自己选歌，选简单的是懦夫",offline:"扣下手机，齐声唱！"},
+  {icon:"🔊",task:"唱一首歌的最高音部分，全场打分，低于6分喝酒。",sub:"唱完才算",offline:"深呼吸，开唱！"},
+  {icon:"🎙️",task:"指定一人，ta必须表演任意一首歌的MV舞台走位。",sub:"不表演喝三杯",offline:"放下手机，开演！"},
+  {icon:"🎸",task:"全场分两队同时唱不同的歌，声音更小的队全体喝酒。",sub:"乱成一团才算成功",offline:"两队站好，开唱！"},
+  {icon:"🎤",task:"用说唱节奏把今晚发生的事rap出来，至少4句，全场打节拍。",sub:"押不押韵不重要，要有气势",offline:"全场打节拍！"},
+  {icon:"🎵",task:"闭眼唱，全场憋着不给反应，看你能唱多久。",sub:"反应最先撑不住的人喝酒",offline:"全场憋住！"},
+],
+rnp:[
+  "今晚对在场某人多看了不止一眼",
+  "手机里现在有未读消息不想回",
+  "有暗恋对象但对方不知道",
+  "今天有什么事没说出口",
+  "最近一周刷过前任动态",
+  "喜欢过朋友的另一半",
+  "同时和两个人暧昧过",
+  "发过一条又删掉的朋友圈",
+  "在感情里总是先付出的那个",
+  "分手后保存着和前任的聊天记录",
+  "明明不想来但还是赴了今晚的约",
+  "嘴上说随便但心里有想法",
+  "今晚假装自己状态比实际好",
+  "此刻在想一个不在场的人",
+  "今晚对某人有感觉但不会说出口",
+  "喝酒说过清醒时不会说的话",
+  "在群里潜水但什么都知道",
+  "今晚撒过一个善意或不善意的谎",
+  "今天整理过自己仪容但没让人注意到",
+  "此刻心里有想联系但没联系的人",
+  "今晚笑了但不是因为真的觉得好笑",
+  "今晚答应过一件根本没打算做的事",
+  "有过因为怕破坏关系而没说出真心话",
+  "曾经拉黑一个人又偷偷换号看他动态",
+  "今晚在场某人让你今天多想了一下",
+  "最近因为在意某人而失眠过",
+  "有人喜欢你但你选择装作不知道",
+  "发过消息让对方等了很久才回",
+  "今晚第一个想走但没表现出来",
+  "今天做了一件让自己有点骄傲的小事",
+],
+};
+const QS={};
+function getP(b){if(!QS[b]||!QS[b].length)QS[b]=[...BANKS[b]].sort(()=>Math.random()-0.5);return QS[b].pop();}
+function rem(b){return QS[b]?QS[b].length:BANKS[b].length;}
+
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+const G={
+  // auth
+  user:null,         // {name, av, gender, phone}
+  // room
+  room:'',roomName:'',host:false,isPublic:true,roomPass:'',
+  // game
+  players:[],game:'',round:1,turn:0,demoI:0,
+  kingI:-1,sel:[],curRaw:'',alts:[],
+  todPick:null,drank:new Set(),
+  votes:{},fistP1:null,fistP2:null,
+};
+const FT={p1:null,p2:null,h1:null,h2:null,c1:5,c2:5,confirmed1:false,confirmed2:false};
+const FHAND_EMOJI={rock:'✊',paper:'✋',scissors:'✌️'};
+const FHAND_LABEL={rock:'石头',paper:'布',scissors:'剪刀'};
+const FBEATS={rock:'scissors',scissors:'paper',paper:'rock'};
+
+/* ════════════════════════════════════
+   AUTH
+════════════════════════════════════ */
+let _regAv=null,_regGender=null;
+
+function switchTab(t){
+  q('#formLogin').style.display=t==='login'?'':'none';
+  q('#formReg').style.display=t==='reg'?'':'none';
+  q('#tabLogin').classList.toggle('on',t==='login');
+  q('#tabReg').classList.toggle('on',t==='reg');
+}
+
+function buildAvGrid(){
+  q('#avGrid').innerHTML=ALL_AVS.map((a,i)=>
+    `<div class="av-opt ${_regAv===a?'on':''}" onclick="pickAv('${a}')">${a}</div>`
+  ).join('');
+}
+
+function pickAv(a){_regAv=a;buildAvGrid();}
+function pickGender(g){
+  _regGender=g;
+  qa('.gender-btn').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+}
+
+async function doRegister(){
+  const name=q('#rName').value.trim();
+  const phone=q('#rPhone').value.trim();
+  const pass=q('#rPass').value.trim();
+  if(!name){toast(t('tInputPhone'));return;}
+  if(!phone||phone.length<7){toast(t('tInputPhone2'));return;}
+  if(!pass){toast(t('tInputPass'));return;}
+  if(!_regAv){toast(t('tPickAvatar'));return;}
+  const user={name,av:_regAv,gender:_regGender||'x',phone,pass};
+  try{await window.storage.set(`user:${phone}`,JSON.stringify(user));}catch(e){}
+  G.user=user;
+  toast(t('tWelcome')+name+'！');
+  goRoomSelect();
+}
+
+async function doLogin(){
+  const id=q('#lPhone').value.trim();
+  const pass=q('#lPass').value.trim();
+  // Try phone lookup
+  let user=null;
+  try{const r=await window.storage.get(`user:${id}`);if(r)user=JSON.parse(r.value);}catch(e){}
+  // Also try name lookup
+  if(!user){
+    try{const keys=await window.storage.list('user:');
+      for(const k of (keys.keys||[])){
+        const r=await window.storage.get(k);
+        if(r){const u=JSON.parse(r.value);if(u.name===id){user=u;break;}}
+      }
+    }catch(e){}
+  }
+  if(!user){toast(t('tNoAccount'));return;}
+  if(user.pass&&user.pass!==pass){toast(t('tWrongPass'));return;}
+  G.user=user;
+  toast(t('tWelcomeBack')+user.name+'！');
+  goRoomSelect();
+}
+
+function doGuest(){
+  const names=['过客甲','路人乙','神秘嘉宾','匿名玩家','游客模式'];
+  G.user={name:names[Math.floor(Math.random()*names.length)],av:ALL_AVS[Math.floor(Math.random()*ALL_AVS.length)],gender:'x'};
+  goRoomSelect();
+}
+
+function doLogout(){G.user=null;show('auth');}
+
+/* ════════════════════════════════════
+   ROOM SELECT
+════════════════════════════════════ */
+function goRoomSelect(){
+  if(!G.user){show('auth');return;}
+  q('#rsAv').textContent=G.user.av;
+  q('#rsName').textContent=G.user.name;
+  loadRooms();
+  show('roomSelect');
+}
+
+async function loadRooms(){
+  q('#publicRooms').innerHTML='<div style="font-size:0.78rem;color:var(--muted);padding:0.5rem 0;">加载中…</div>';
+  let pubs=[];
+  try{
+    const keys=await window.storage.list('room:',true);
+    for(const k of (keys.keys||[]).slice(0,8)){
+      try{const r=await window.storage.get(k,true);if(r){const rm=JSON.parse(r.value);if(rm.isPublic)pubs.push(rm);}}catch(e){}
+    }
+  }catch(e){}
+  q('#publicRooms').innerHTML=pubs.length?pubs.map(rm=>roomCardHTML(rm)).join('')
+    :'<div style="font-size:0.78rem;color:var(--muted);padding:0.5rem 0;">暂无公开房间</div>';
+  q('#myRooms').innerHTML='';
+}
+
+function roomCardHTML(rm){
+  return `<div class="room-card" onclick="joinRoomDirect('${rm.code}','${rm.pass||''}')">
+    <div class="rc-icon">🎮</div>
+    <div><div class="rc-name">${rm.name}</div><div class="rc-meta">${rm.players||0}人在场 · ${rm.game||'选游戏中'}</div></div>
+    <div class="rc-badge ${rm.isPublic?'pub':'priv'}">${rm.isPublic?'PUBLIC':'PRIVATE'}</div>
+  </div>`;
+}
+
+let _crPublic=true;
+function togglePublic(){_crPublic=!_crPublic;q('#crPublicToggle').classList.toggle('on',_crPublic);q('#crPassRow').style.display=_crPublic?'none':'';}
+function showCreateRoom(){q('#crPublicToggle').classList.add('on');_crPublic=true;q('#crPassRow').style.display='none';showModal('createModal');}
+function showJoinRoom(){showModal('joinModal');}
+function showModal(id){q('#'+id).classList.add('show');}
+function closeModal(id){q('#'+id).classList.remove('show');}
+
+async function doCreateRoom(){
+  const name=q('#crName').value.trim()||'今晚的局';
+  const pass=q('#crPass').value.trim();
+  const code=rndCode();
+  const room={code,name,pass,isPublic:_crPublic,players:1,game:'',host:G.user.name};
+  try{await window.storage.set(`room:${code}`,JSON.stringify(room),true);}catch(e){}
+  G.room=code;G.roomName=name;G.host=true;G.isPublic=_crPublic;G.roomPass=pass;
+  G.players=[];addP(G.user.name,G.user.av);
+  closeModal('createModal');
+  goLobbyScreen();
+}
+
+async function doJoinRoom(){
+  const code=q('#jCode').value.trim().toUpperCase();
+  const pass=q('#jPass').value.trim();
+  if(!code){toast('输入房间码');return;}
+  let room=null;
+  try{const r=await window.storage.get(`room:${code}`,true);if(r)room=JSON.parse(r.value);}catch(e){}
+  if(!room){toast(t('tRoomNotFound'));return;}
+  if(room.pass&&room.pass!==pass){toast(t('tWrongRoomPass'));return;}
+  G.room=code;G.roomName=room.name;G.host=false;G.players=[];
+  ['小明','小花','阿强'].forEach((n,i)=>addP(n,ALL_AVS[i+2]));
+  addP(G.user.name,G.user.av);
+  closeModal('joinModal');
+  goLobbyScreen();
+}
+
+function joinRoomDirect(code,pass){
+  q('#jCode').value=code;q('#jPass').value=pass;doJoinRoom();
+}
+
+function goLobbyScreen(){
+  q('#lobTitle').textContent=G.roomName||'LOBBY_';
+  q('#lCode').textContent=G.room;
+  q('#lobHint').textContent=`房间码 ${G.room} · 分享给朋友`;
+  renderLobbyPlayers();
+  show('lobby');
+}
+
+function renderLobbyPlayers(){
+  q('#lobbyPlayers').innerHTML=G.players.map(p=>`
+    <div class="p-chip ${p.name===G.user?.name?'me':''}">
+      <span>${p.av}</span><span>${p.name}</span>
+    </div>`).join('');
+}
+
+function addP(name,av){
+  G.players.push({name,av:av||ALL_AVS[G.players.length%ALL_AVS.length],
+    turns:0,drinks:0,chickens:0,done:0});
+}
+function addDemo(){
+  if(G.players.length>=10){toast(t('tMaxPlayers'));return;}
+  let n=DEMO_NAMES[G.demoI%DEMO_NAMES.length];G.demoI++;
+  const taken=G.players.map(p=>p.name);
+  let sfx=2;while(taken.includes(n))n=DEMO_NAMES[(G.demoI-1)%DEMO_NAMES.length]+sfx++;
+  addP(n);renderLobbyPlayers();
+}
+function rndCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
+function copyRoom(){navigator.clipboard.writeText(G.room).then(()=>toast(t('tCopied')+G.room)).catch(()=>toast(G.room));}
+function goRoomSelect2(){goRoomSelect();}
+
+function pickGame(g){
+  G.game=g;qa('.g-tile').forEach(t=>t.classList.remove('on'));q(`[data-g="${g}"]`).classList.add('on');
+}
+
+/* ════════════════════════════════════
+   START GAME
+════════════════════════════════════ */
+function startGame(){
+  if(!G.game){toast(t('tSelectGame'));return;}
+  if(G.players.length<2){toast(t('tMinPlayers'));return;}
+  G.players=[...G.players].sort(()=>Math.random()-0.5);
+  G.round=1;G.turn=0;
+  Object.keys(QS).forEach(k=>delete QS[k]);
+  FEED.length=0;
+  feedAdd('sys',`游戏开始！${G.players.map(p=>p.av+p.name).join(' → ')}`,'🎉');
+  initGame();show('game');
+}
+
+function initGame(){
+  const labels={kings:t('gLabel_kings'),rnp:t('gLabel_rnp'),tod:t('gLabel_tod'),nhie:t('gLabel_nhie'),wyr:t('gLabel_wyr'),liar:t('gLabel_liar'),fist:t('gLabel_fist'),ktv:t('gLabel_ktv')};
+  q('#gMode').textContent=labels[G.game]||G.game;
+  qa('[id^="ui"]').forEach(el=>{el.style.display='none';});
+  const uiEl=q('#ui'+cap(G.game));
+  if(uiEl)uiEl.style.display='flex';
+  if(G.game==='kings')buildCircle();
+  if(G.game==='nhie')buildNhieGrid();
+  if(G.game==='wyr')buildWyrVoters();
+  if(G.game==='liar')initLiar();
+  if(G.game==='fist')initFist();
+  if(G.game==='rnp')initRnp();
+  resetTurn();
+}
+function cap(s){return s[0].toUpperCase()+s.slice(1);}
+
+/* ════════════════════════════════════
+   TURN MANAGEMENT
+════════════════════════════════════ */
+function resetTurn(){
+  const p=cur();
+  q('#tName').textContent=p.name;
+  q('#gRnd').textContent=`RND ${G.round}`;
+  q('#btnDraw').style.display='';q('#btnNext').style.display='none';
+  resetRxn();showFeedRxn();
+  G.players[G.turn%G.players.length].turns++;
+  if(G.game==='tod'){q('#spAv').textContent=p.av;q('#spNm').textContent=p.name;qa('.tod-btn').forEach(b=>b.classList.remove('on'));q('#todReveal').classList.remove('show');G.todPick=null;q('#btnDraw').style.display='none';}
+  if(G.game==='nhie'){q('#nhieStmt').textContent='点击「抽题」揭晓…';q('#nhieFlav').textContent='';q('#nhieTally').textContent='';G.drank.clear();buildNhieGrid();}
+  if(G.game==='wyr'){q('#wyrOptA').textContent='—';q('#wyrOptB').textContent='';q('#wyrPctA').textContent='';q('#wyrPctB').textContent='';q('#wyrA').style.setProperty('--bar','0%');q('#wyrB').style.setProperty('--bar','0%');q('#wyrArena').className='wyr-arena';G.votes={};buildWyrVoters();}
+  if(G.game==='kings'){q('#kCmd').style.display='none';G.kingI=-1;G.sel=[];updateSeats();q('#kThrone').className='k-throne';q('#kThrone').innerHTML=`<div class="k-throne-icon">🎲</div><div class="k-throne-nm">抽牌</div>`;}
+  if(G.game==='liar'){q('#btnDraw').style.display='none';initLiar();}
+  if(G.game==='fist')initFist();
+  if(G.game==='ktv'){q('#ktvTask').textContent='点击「抽题」';q('#ktvSub').textContent='';q('#ktvPlayers').innerHTML='';}
+  if(G.game==='rnp'){q('#btnDraw').style.display='none';q('#btnNext').style.display='none';initRnp();}
+  setTimeout(()=>showBlast(p),250);
+}
+function cur(){return G.players[G.turn%G.players.length];}
+function nextTurn(){
+  if(G.game==='rnp'){rnpNextRound();return;}
+  G.turn++;if(G.turn%G.players.length===0)G.round++;
+  G.kingI=-1;resetTurn();
+}
+function goLobby(){show('lobby');}
+
+/* ════════════════════════════════════
+   DRAW ROUTER
+════════════════════════════════════ */
+async function doDraw(){
+  if(G.game==='kings')await drawKings();
+  else if(G.game==='nhie')await drawNhie();
+  else if(G.game==='wyr')await drawWyr();
+  else if(G.game==='ktv')await drawKtv();
+}
+
+/* ════════════════════════════════════
+   👑 KING'S GAME
+════════════════════════════════════ */
+function buildCircle(){
+  const arena=q('#kArena');arena.querySelectorAll('.seat').forEach(n=>n.remove());
+  const n=G.players.length,size=arena.offsetWidth||300;
+  const cx=size/2,cy=size/2,r=size*0.42;
+  G.players.forEach((p,i)=>{
+    const a=(i/n)*2*Math.PI-Math.PI/2;
+    const s=document.createElement('div');s.className='seat';s.id=`s${i}`;
+    s.style.left=(cx+r*Math.cos(a))+'px';s.style.top=(cy+r*Math.sin(a))+'px';
+    s.innerHTML=`<div class="sav">${p.av}</div><div class="snm">${p.name}</div>`;
+    s.onclick=()=>selSeat(i);arena.appendChild(s);
+  });
+}
+function updateSeats(){
+  G.players.forEach((_,i)=>{const s=q(`#s${i}`);if(!s)return;s.className='seat';
+    if(i===G.kingI)s.classList.add('is-king');
+    if(G.sel[0]===i)s.classList.add('sel1');
+    if(G.sel[1]===i)s.classList.add('sel2');});
+}
+async function drawKings(){
+  q('#btnDraw').style.display='none';
+  const ki=Math.floor(Math.random()*G.players.length);G.kingI=ki;G.sel=[];
+  const king=G.players[ki];
+  q('#kThrone').className='k-throne crowned';
+  q('#kThrone').innerHTML=`<div class="k-throne-icon">👑</div><div class="k-throne-nm">${king.name}</div>`;
+  updateSeats();showKingsCmd(king);q('#btnNext').style.display='';
+}
+function showKingsCmd(king){
+  const raw=getP('kings');G.curRaw=raw;
+  q('#kCmdHd').textContent=`👑 ${king.name} 是国王`;
+  q('#kCmdBd').textContent=raw;
+  const a1=getP('kings'),a2=getP('kings');G.alts=[a1,a2];
+  q('#kChips').innerHTML=[a1,a2].map((s,i)=>`<div class="chip" onclick="useAlt(${i})">${s.length>40?s.slice(0,37)+'…':s}</div>`).join('');
+  q('#kCmdCnt').textContent=`还有${rem('kings')}条`;
+  q('#kCmdAsgn').innerHTML='在圆圈中点选 <span>两位玩家</span> 来指定任务';
+  q('#kCmd').style.display='block';G.sel=[];updateSeats();
+  feedAdd('kings',`👑 ${king.name}成为国王`,'👑');
+}
+function anotherCmd(){showKingsCmd(G.players[G.kingI]||cur());}
+function useAlt(i){qa('.chip').forEach((c,j)=>c.classList.toggle('on',j===i));G.curRaw=G.alts[i];q('#kCmdBd').textContent=G.alts[i];if(G.sel.length===2)applyAssign();}
+function selSeat(i){
+  if(i===G.kingI)return;
+  if(G.sel.includes(i)){G.sel=G.sel.filter(x=>x!==i);}
+  else{if(G.sel.length<2)G.sel.push(i);else{G.sel.shift();G.sel.push(i);}}
+  updateSeats();
+  if(G.sel.length===2){applyAssign();
+    const p1=G.players[G.sel[0]],p2=G.players[G.sel[1]];
+    showOfflineAnchor('🎯','放下手机，执行命令！',q('#kCmdBd').textContent,`${p1.name} 和 ${p2.name} 开始！`,30);}
+}
+function applyAssign(){
+  const p1=G.players[G.sel[0]],p2=G.players[G.sel[1]];
+  let txt=G.curRaw.replace(/\bA\b/g,p1.name).replace(/\bB\b/g,p2.name);
+  q('#kCmdBd').textContent=txt;
+  q('#kCmdAsgn').innerHTML=`<span style="color:var(--np)">${p1.name}</span> & <span style="color:var(--nc)">${p2.name}</span> ✦`;
+  feedAdd('kings',`${p1.name}和${p2.name}：${txt.slice(0,50)}…`,'⚡');
+}
+
+/* ════════════════════════════════════
+   🎭 TRUTH OR DARE
+════════════════════════════════════ */
+async function pickTod(pick){
+  if(G.todPick)return;G.todPick=pick;
+  qa('.tod-btn').forEach(b=>b.classList.remove('on'));q('.tod-btn.'+pick).classList.add('on');
+  const p=cur(),bk=pick==='truth'?'tod_truth':'tod_dare';
+  if(Math.random()<0.7){
+    const txt=getP(bk),isD=pick==='dare';
+    q('#todCat').textContent=`✦ ${pick==='truth'?'真心话':'大冒险'} ✦`;
+    q('#todCat').className='tod-cat '+(isD?'d':'t');
+    q('#todText').textContent=txt;q('#todFlav').textContent='';
+    q('#todReveal').classList.add('show');
+    q('#todReveal').style.borderColor=isD?'rgba(255,0,153,0.35)':'rgba(0,255,204,0.3)';
+    q('#btnNext').style.display='';
+    feedAdd('tod',`${p.name} 选了${pick==='truth'?'真心话':'大冒险'}`,isD?'🔥':'🔮');
+    if(isD)showOfflineAnchor('🔥','放下手机，执行大冒险！',txt,`全场监督 ${p.name}`,45);
+    return;
+  }
+  setLoad(true);
+  try{
+    const r=await oracle(`你是AI派对主持人，风格辛辣戏剧化。给「${p.name}」出一道${pick==='truth'?'真心话':'大冒险'}。在场：${G.players.filter(x=>x.name!==p.name).map(x=>x.name).join('、')}。中文，简短有力，不超过60字。只返回JSON：{"type":"真心话或大冒险","content":"题目","flavor":"15字以内辛辣点评"}`);
+    const isD=r.type?.includes('冒险');
+    q('#todCat').textContent=`✦ ${r.type||pick} ✦`;q('#todCat').className='tod-cat '+(isD?'d':'t');
+    q('#todText').textContent=r.content||'…';q('#todFlav').textContent=r.flavor?`— ${r.flavor}`:'';
+  }catch{const txt=getP(bk),isD=pick==='dare';q('#todCat').textContent=`✦ ${pick==='truth'?'真心话':'大冒险'} ✦`;q('#todCat').className='tod-cat '+(isD?'d':'t');q('#todText').textContent=txt;q('#todFlav').textContent='';}
+  setLoad(false);
+  q('#todReveal').classList.add('show');q('#btnNext').style.display='';
+  feedAdd('tod',`${p.name}接受挑战`,G.todPick==='dare'?'🔥':'🔮');
+}
+
+/* ════════════════════════════════════
+   🥂 NHIE
+════════════════════════════════════ */
+function buildNhieGrid(){
+  q('#nhieGrid').innerHTML=G.players.map(p=>`
+    <div class="nhie-btn" id="nb${p.num||G.players.indexOf(p)}" onclick="drinkTap(${G.players.indexOf(p)})">
+      <div style="font-size:1.2rem">${p.av}</div><div style="font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--muted)">${p.name}</div>
+      <div class="nd">🍺</div>
+    </div>`).join('');
+}
+function drinkTap(idx){
+  const el=q(`#nb${idx}`),pl=G.players[idx];
+  if(G.drank.has(idx)){G.drank.delete(idx);el.classList.remove('drank');}
+  else{G.drank.add(idx);el.classList.add('drank');if(pl){pl.drinks++;feedAdd('nhie',`${pl.name} 喝了一口`,'🥂');}}
+  const c=G.drank.size;q('#nhieTally').textContent=c===0?'':`${c}人喝了 🍺`;
+  if(c>0)q('#btnNext').style.display='';
+}
+async function drawNhie(){
+  q('#btnDraw').style.display='none';
+  if(Math.random()<0.7){
+    const stmt=getP('nhie');q('#nhieStmt').textContent=stmt;q('#nhieFlav').textContent='经历过的点你的头像 👇';
+    q('#nhieTally').textContent='';buildNhieGrid();feedAdd('nhie',stmt.slice(0,55),'🥂');return;
+  }
+  setLoad(true);
+  try{const r=await oracle(`你是AI派对主持人。生成一条「我从来没有」的句子。在场：${G.players.map(p=>p.name).join('、')}。劲爆真实，中国年轻人派对风格，不超过30字。只返回JSON：{"content":"我从来没有[内容]","flavor":"夜神点评"}`);
+    q('#nhieStmt').textContent=r.content||'我从来没有…';q('#nhieFlav').textContent=r.flavor?`—${r.flavor}`:'';
+  }catch{q('#nhieStmt').textContent=getP('nhie');}
+  setLoad(false);q('#nhieTally').textContent='经历过的点你的头像 👇';buildNhieGrid();
+  feedAdd('nhie',q('#nhieStmt').textContent.slice(0,55),'🥂');
+}
+
+/* ════════════════════════════════════
+   🆚 WOULD YOU RATHER
+════════════════════════════════════ */
+function buildWyrVoters(){
+  q('#wyrVoters').innerHTML=G.players.map((p,i)=>`
+    <div class="wyr-voter" id="wv${i}"><span style="font-size:1rem">${p.av}</span><span style="font-family:'Share Tech Mono',monospace;font-size:0.54rem;color:var(--muted)">${p.name.slice(0,4)}</span></div>`).join('');
+}
+async function drawWyr(){
+  q('#btnDraw').style.display='none';
+  const apply=(a,b)=>{
+    q('#wyrOptA').textContent=a;q('#wyrOptB').textContent=b;
+    q('#wyrArena').style.animation='none';void q('#wyrArena').offsetWidth;q('#wyrArena').style.animation='revealBurst 0.4s ease';
+    G.votes={};buildWyrVoters();
+    feedAdd('wyr',`「${a.slice(0,25)}」vs「${b.slice(0,25)}」`,'🆚');
+    qa('.wyr-voter').forEach((btn,i)=>{btn.onclick=()=>{
+      if(!G.votes[i])G.votes[i]='a';else if(G.votes[i]==='a')G.votes[i]='b';else delete G.votes[i];
+      btn.classList.remove('va','vb');if(G.votes[i])btn.classList.add('v'+G.votes[i]);
+      updateWyrBars();if(Object.keys(G.votes).length>0)q('#btnNext').style.display='';};});
+  };
+  if(Math.random()<0.7){const qd=getP('wyr');apply(qd.a,qd.b);return;}
+  setLoad(true);
+  try{const r=await oracle(`你是AI派对主持人。出一道「你选哪个」题目，玩家：${G.players.map(x=>x.name).join('、')}。两难、有趣、中国年轻人场景，每个选项20字以内。只返回JSON：{"optionA":"选项A","optionB":"选项B","flavor":"评语"}`);
+    if(r.flavor)toast(r.flavor);apply(r.optionA||'…',r.optionB||'…');
+  }catch{const qd=getP('wyr');apply(qd.a,qd.b);}
+  setLoad(false);
+}
+function wyrVote(side){
+  const p=cur();const idx=G.players.indexOf(p);
+  G.votes[idx]=side;const el=q(`#wv${idx}`);el.classList.remove('va','vb');el.classList.add('v'+side);
+  updateWyrBars();q('#btnNext').style.display='';
+}
+function updateWyrBars(){
+  const total=Object.keys(G.votes).length;if(!total)return;
+  const a=Object.values(G.votes).filter(v=>v==='a').length;
+  const ap=Math.round(a/total*100),bp=100-ap;
+  q('#wyrPctA').textContent=ap+'%';q('#wyrPctB').textContent=bp+'%';
+  q('#wyrA').style.setProperty('--bar',ap+'%');q('#wyrB').style.setProperty('--bar',bp+'%');
+}
+
+/* ════════════════════════════════════
+   🎲 LIAR'S DICE
+════════════════════════════════════ */
+const DICE_FACES=['','⚀','⚁','⚂','⚃','⚄','⚅'];
+const LD={dice:{},bid:{qty:0,face:0},bidder:-1,myQty:1,myFace:1,n:5,phase:'bidding',activeIdx:0,simTimer:null};
+function renderDieFace(val){
+  const pip=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="6.5" fill="#1a0805"/>`;
+  const faces={1:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(31,31)}`,
+    2:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(18,18)}${pip(44,44)}`,
+    3:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(18,18)}${pip(31,31)}${pip(44,44)}`,
+    4:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(18,18)}${pip(44,18)}${pip(18,44)}${pip(44,44)}`,
+    5:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(18,18)}${pip(44,18)}${pip(31,31)}${pip(18,44)}${pip(44,44)}`,
+    6:`<rect width="62" height="62" rx="11" fill="#f5ede0"/>${pip(18,15)}${pip(44,15)}${pip(18,31)}${pip(44,31)}${pip(18,47)}${pip(44,47)}`};
+  return `<svg width="62" height="62" viewBox="0 0 62 62" style="filter:drop-shadow(3px 4px 0 rgba(0,0,0,0.55))">${faces[val]||faces[1]}</svg>`;
+}
+function initLiar(){
+  clearTimeout(LD.simTimer);LD.simTimer=null;
+  LD.dice={};LD.bid={qty:0,face:0};LD.bidder=-1;LD.myQty=1;LD.myFace=1;LD.n=5;LD.phase='bidding';
+  LD.activeIdx=G.turn%G.players.length;
+  G.players.forEach((_,i)=>{LD.dice[i]=Array.from({length:5},()=>Math.ceil(Math.random()*6));});
+  q('#btnDraw').style.display='none';q('#btnNext').style.display='none';
+  q('#liarReveal').style.display='none';renderLiar();
+}
+function renderLiar(){
+  const myIdx=G.turn%G.players.length,myDice=LD.dice[myIdx]||[];
+  const isMyTurn=LD.activeIdx===myIdx&&LD.phase==='bidding';
+  q('#liarDiceLabel').textContent=`🎲 ${G.players[myIdx].name} ${t('liarMyDiceLabel')}`;
+  const area=q('#diceArea');area.innerHTML='';
+  myDice.forEach(v=>{const w=document.createElement('div');w.style.cssText='display:inline-block;';w.innerHTML=renderDieFace(v);area.appendChild(w);});
+  if(LD.bid.qty>0){q('#liarBidDisplay').style.display='';q('#liarBidText').textContent=`至少 ${LD.bid.qty} 个 ${LD.bid.face} 点`;q('#liarBidWho').textContent=LD.bidder>=0?`${G.players[LD.bidder].name} 喊的`:'';
+  }else{q('#liarBidDisplay').style.display='none';}
+  q('#liarPlayerRow').innerHTML=G.players.map((p,i)=>{const active=i===LD.activeIdx&&LD.phase==='bidding';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:0.15rem;padding:0.4rem 0.5rem;border-radius:9px;min-width:52px;text-align:center;background:${active?'rgba(0,255,204,0.08)':'rgba(255,255,255,0.025)'};border:1px solid ${active?'rgba(0,255,204,0.45)':'rgba(255,255,255,0.07)'};transition:all 0.3s;">
+      <span style="font-size:1rem">${p.av}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:0.54rem;color:${active?'var(--ng)':'var(--muted)'};">${p.name.slice(0,4)}</span>
+      <span style="font-size:0.65rem;color:${active?'var(--ng)':'var(--muted)'}">🎲×5</span>
+      ${active?'<span style="font-size:0.55rem;color:var(--ng)">▶</span>':''}
+    </div>`;}).join('');
+  if(LD.phase==='reveal')return;
+  if(isMyTurn){
+    if(LD.bid.qty>0){const ok=LD.myQty>LD.bid.qty||(LD.myQty===LD.bid.qty&&LD.myFace>LD.bid.face);if(!ok){if(LD.bid.face<6){LD.myQty=LD.bid.qty;LD.myFace=LD.bid.face+1;}else{LD.myQty=LD.bid.qty+1;LD.myFace=1;}}}
+    q('#liarBidControls').style.display='';updateBidDisplay();
+  }else{q('#liarBidControls').style.display='none';if(!LD.simTimer){LD.simTimer=setTimeout(()=>{LD.simTimer=null;aiDoBid();},1400);}}
+}
+function updateBidDisplay(){q('#bidQty').textContent=LD.myQty;q('#bidFace').textContent=LD.myFace;q('#bidQtyDisplay').textContent=LD.myQty;q('#bidFaceDisplay').textContent=LD.myFace;}
+function adjBid(type,delta){if(type==='qty')LD.myQty=Math.max(1,Math.min(G.players.length*LD.n,LD.myQty+delta));else LD.myFace=Math.max(1,Math.min(6,LD.myFace+delta));updateBidDisplay();}
+function confirmBid(){
+  if(LD.phase!=='bidding')return;
+  if(LD.bid.qty>0){const ok=LD.myQty>LD.bid.qty||(LD.myQty===LD.bid.qty&&LD.myFace>LD.bid.face);if(!ok){toast('出价必须比上家更高！');return;}}
+  const myIdx=G.turn%G.players.length;LD.bid={qty:LD.myQty,face:LD.myFace};LD.bidder=myIdx;
+  feedAdd('liar',`${G.players[myIdx].name} 喊：至少 ${LD.myQty} 个 ${LD.myFace} 点`,'🎲');
+  LD.activeIdx=(myIdx+1)%G.players.length;
+  if(LD.myFace<6)LD.myFace++;else{LD.myFace=1;LD.myQty++;}renderLiar();
+}
+function aiDoBid(){
+  if(LD.phase==='reveal')return;
+  if(LD.activeIdx===G.turn%G.players.length){renderLiar();return;}
+  const p=G.players[LD.activeIdx];const bidHigh=LD.bid.qty>=G.players.length*2;
+  if(LD.bid.qty>0&&Math.random()<(bidHigh?0.4:0.18)){toast(`${p.name}：我不信！开盖！😤`);setTimeout(()=>resolveChallenge(LD.activeIdx),700);return;}
+  let qty=LD.bid.qty,face=LD.bid.face;
+  if(qty===0){qty=1;face=Math.ceil(Math.random()*6);}else if(Math.random()<0.55){qty++;}else{face=face<6?face+1:1;if(face===1)qty++;}
+  LD.bid={qty,face};LD.bidder=LD.activeIdx;
+  feedAdd('liar',`${p.name} 喊：至少 ${qty} 个 ${face} 点`,'🎲');toast(`${p.name}：至少 ${qty} 个 ${face} 点`);
+  LD.activeIdx=(LD.activeIdx+1)%G.players.length;renderLiar();
+}
+function liarChallenge(){
+  if(LD.bid.qty===0){toast('还没人出价！');return;}if(LD.phase==='reveal')return;
+  clearTimeout(LD.simTimer);LD.simTimer=null;
+  toast(`${G.players[G.turn%G.players.length].name} 开盖！`);setTimeout(()=>resolveChallenge(G.turn%G.players.length),400);
+}
+function resolveChallenge(cIdx){
+  LD.phase='reveal';clearTimeout(LD.simTimer);LD.simTimer=null;
+  const face=LD.bid.face,qty=LD.bid.qty;let total=0,rows='';
+  G.players.forEach((p,i)=>{const dice=LD.dice[i]||[],match=dice.filter(d=>d===face).length;total+=match;
+    rows+=`<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem;font-size:0.85rem;flex-wrap:wrap;">
+      <span>${p.av} <b>${p.name}</b></span>
+      <span style="display:flex;gap:3px">${dice.map(d=>`<div style="opacity:${d===face?1:0.28};transform:${d===face?'scale(1.08)':'scale(0.82)'}">${renderDieFace(d)}</div>`).join('')}</span>
+      <span style="color:var(--muted);font-size:0.72rem">(${match}个${face}点)</span></div>`;});
+  const ch=G.players[cIdx],bd=G.players[LD.bidder],bidStands=total>=qty,loser=bidStands?ch:bd;
+  loser.drinks=(loser.drinks||0)+2;
+  const verdict=bidStands?`实际 <b style="color:#00dc50">${total}</b> 个 ${face} 点 ≥ ${qty} ✅ &nbsp;${bd.name}没吹牛！<br><b style="color:var(--np)">${ch.name} 喝两杯 🍺</b>`:`实际只有 <b style="color:var(--np)">${total}</b> 个 ${face} 点 &lt; ${qty} ❌<br><b style="color:var(--np)">${bd.name} 喝两杯 🍺</b>`;
+  q('#liarReveal').style.display='';q('#liarRevealText').innerHTML=`<div style="margin-bottom:0.5rem;font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted)">— 开盖结果 —</div>${rows}<div style="margin-top:0.6rem;line-height:1.7">${verdict}</div>`;
+  q('#liarBidDisplay').style.display='none';q('#liarBidControls').style.display='none';
+  feedAdd('liar',`开盖！实际${total}个${face}点，${loser.name}喝两杯`,'😤');q('#btnNext').style.display='';
+}
+
+/* ════════════════════════════════════
+   ✊ FIST
+════════════════════════════════════ */
+function initFist(){
+  FT.p1=cur();FT.p2=null;FT.h1=null;FT.h2=null;FT.c1=5;FT.c2=5;FT.confirmed1=false;FT.confirmed2=false;
+  q('#btnDraw').style.display='none';q('#btnNext').style.display='none';fistGoPhase(1);
+}
+function fistGoPhase(n){
+  q('#fPhase1').style.display=n===1?'':'none';q('#fPhase2').style.display=n===2?'':'none';q('#fPhase3').style.display=n===3?'':'none';
+  [1,2,3].forEach(i=>{const d=q(`#fdot${i}`),l=q(`#flbl${i}`);d.className='fstep-dot'+(i<n?' done':i===n?' active':'');l.className='fstep-lbl'+(i===n?' active':'');});
+  if(n===1)buildFistOpponents();if(n===2)buildFistRound();
+}
+function buildFistOpponents(){
+  q('#fChallName').textContent=FT.p1.name;
+  q('#fOpponentGrid').innerHTML=G.players.filter(p=>p.name!==FT.p1.name).map((p,i)=>`
+    <div onclick="pickFistOpponent(${G.players.indexOf(p)})"
+      style="display:flex;flex-direction:column;align-items:center;gap:0.28rem;
+      padding:0.65rem 0.8rem;border-radius:10px;min-width:64px;cursor:pointer;
+      background:rgba(123,47,255,0.06);border:1.5px solid rgba(123,47,255,0.2);
+      transition:all 0.2s;"
+      onmouseover="this.style.background='rgba(123,47,255,0.15)';this.style.borderColor='rgba(0,255,204,0.5)'"
+      onmouseout="this.style.background='rgba(123,47,255,0.06)';this.style.borderColor='rgba(123,47,255,0.2)'">
+      <span style="font-size:1.7rem">${p.av}</span>
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:var(--nc)">${p.name}</span>
+    </div>`).join('');
+}
+function pickFistOpponent(idx){FT.p2=G.players[idx];feedAdd('fist',`${FT.p1.name} 挑战 ${FT.p2.name}`,'✊');fistGoPhase(2);}
+function buildFistRound(){
+  q('#fP1Av').textContent=FT.p1.av;q('#fP1Nm').textContent=FT.p1.name;
+  q('#fP2Av').textContent=FT.p2.av;q('#fP2Nm').textContent=FT.p2.name;
+  q('#fCall1Num').textContent=FT.c1;q('#fCall2Num').textContent=FT.c2;
+  ['rock','paper','scissors'].forEach(h=>{q(`#fc1_${h}`).classList.remove('chosen');q(`#fc2_${h}`).classList.remove('chosen');});
+  const b1=q('#fP1Confirm'),b2=q('#fP2Confirm');b1.disabled=true;b1.style.opacity='0.4';b2.disabled=true;b2.style.opacity='0.4';
+  q('#fP2Zone').style.opacity='0.35';q('#fP2Zone').style.pointerEvents='none';
+}
+function selectHand(player,hand){
+  const prefix=`fc${player}_`;['rock','paper','scissors'].forEach(h=>q(`#${prefix}${h}`).classList.remove('chosen'));
+  q(`#${prefix}${hand}`).classList.add('chosen');
+  if(player===1){FT.h1=hand;const b=q('#fP1Confirm');b.disabled=false;b.style.opacity='1';}
+  else{FT.h2=hand;const b=q('#fP2Confirm');b.disabled=false;b.style.opacity='1';}
+}
+function adjCall(player,delta){
+  if(player===1){FT.c1=Math.max(0,Math.min(10,FT.c1+delta));q('#fCall1Num').textContent=FT.c1;}
+  else{FT.c2=Math.max(0,Math.min(10,FT.c2+delta));q('#fCall2Num').textContent=FT.c2;}
+}
+function confirmHand(player){
+  if(player===1){if(!FT.h1){toast('请先选择出拳！');return;}FT.confirmed1=true;
+    const b=q('#fP1Confirm');b.textContent='✅ 已锁定';b.disabled=true;b.style.background='rgba(0,220,80,0.1)';b.style.borderColor='rgba(0,220,80,0.4)';b.style.color='#00dc50';
+    q('#fP1Zone').style.opacity='0.5';q('#fP2Zone').style.opacity='1';q('#fP2Zone').style.pointerEvents='';
+    toast(`${FT.p1.name} 已锁定，翻给 ${FT.p2.name}！`);
+  }else{if(!FT.h2){toast('请先选择出拳！');return;}FT.confirmed2=true;revealFist();}
+}
+function revealFist(){
+  const h1=FT.h1,h2=FT.h2,p1=FT.p1,p2=FT.p2,sum=FT.c1+FT.c2;
+  let winner=null,msg='',sub='';
+  if(h1===h2){msg='🤝 平局！';sub=`都出了${FHAND_LABEL[h1]}，再来！`;}
+  else if(FBEATS[h1]===h2){winner=p1;msg=`🎉 ${p1.name} 赢！`;sub=`${FHAND_EMOJI[h1]} 胜 ${FHAND_EMOJI[h2]}`;p2.drinks=(p2.drinks||0)+1;}
+  else{winner=p2;msg=`🎉 ${p2.name} 赢！`;sub=`${FHAND_EMOJI[h2]} 胜 ${FHAND_EMOJI[h1]}`;p1.drinks=(p1.drinks||0)+1;}
+  let callNote='';
+  if(FT.c1===sum)callNote=`${p1.name} 喊的 ${FT.c1} 刚好是总点 ${sum}，额外荣耀！`;
+  else if(FT.c2===sum)callNote=`${p2.name} 喊的 ${FT.c2} 刚好是总点 ${sum}，额外荣耀！`;
+  else callNote=`总点 ${sum}（${p1.name}喊${FT.c1} / ${p2.name}喊${FT.c2}）`;
+  q('#fResultVs').innerHTML=`
+    <div style="text-align:center"><div style="font-size:2.5rem">${FHAND_EMOJI[h1]}</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:var(--np)">${p1.name}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:var(--np)">喊：${FT.c1}</div></div>
+    <div style="font-size:1.6rem;color:var(--muted)">VS</div>
+    <div style="text-align:center"><div style="font-size:2.5rem">${FHAND_EMOJI[h2]}</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:var(--nc)">${p2.name}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.85rem;color:var(--nc)">喊：${FT.c2}</div></div>`;
+  q('#fResultText').textContent=msg;q('#fResultText').style.color=h1===h2?'var(--ng)':winner===p1?'var(--np)':'var(--nc)';
+  q('#fResultSub').innerHTML=`${sub}<br><span style="font-size:0.76rem;margin-top:0.3rem;display:block">${callNote}</span>`;
+  if(winner)q('#fResultSub').innerHTML+=`<br><b style="color:var(--np)">${winner===p1?p2.name:p1.name} 喝一杯 🍺</b>`;
+  feedAdd('fist',`${p1.name}${FHAND_EMOJI[h1]} vs ${p2.name}${FHAND_EMOJI[h2]} — ${msg}`,'✊');
+  fistGoPhase(3);q('#btnNext').style.display='';
+}
+function fistRematch(){fistGoPhase(2);}
+
+/* ════════════════════════════════════
+   🎤 KTV
+════════════════════════════════════ */
+async function drawKtv(){
+  q('#btnDraw').style.display='none';
+  const scen=getP('ktv');
+  q('#ktvIcon').textContent=scen.icon;q('#ktvTitle').textContent='KTV 罚唱';
+  q('#ktvTask').textContent=scen.task;q('#ktvSub').textContent=scen.sub;
+  q('#ktvPlayers').innerHTML=G.players.sort(()=>Math.random()-0.5).slice(0,3).map(p=>`<div class="ktv-player-tag">${p.av} ${p.name}</div>`).join('');
+  feedAdd('ktv',scen.task.slice(0,50),'🎤');
+  showOfflineAnchor(scen.icon,'放下手机，开唱！',scen.task,scen.offline,60);q('#btnNext').style.display='';
+}
+
+/* ════════════════════════════════════
+   🃏 RED / BLACK CARD — full P2P flow
+════════════════════════════════════ */
+const RNP={
+  qs:[],qIdx:0,
+  votes:{},       // playerIdx → 'red'|'black'
+  myVote:null,myIdx:0,
+  timerSecs:30,timerHandle:null,
+  // Phase 2
+  tgGuesses:{},   // playerIdx → number|null
+  bets:[],        // {id,fromIdx,targetIdx,stake,status:'pending'|'accepted'|'declined',guess:null}
+  betIdCounter:0,
+  guessedTargets:new Set(),  // targetIdx that have been bet on
+  historyLog:[],  // settled bet records
+  totalRevealed:false,
+};
+
+function initRnp(){
+  RNP.qs=[...BANKS.rnp].sort(()=>Math.random()-0.5);
+  RNP.qIdx=0;
+  rnpNextRound(true);
+}
+
+function rnpNextRound(first=false){
+  if(!first){G.turn++;if(G.turn%G.players.length===0)G.round++;q('#tName').textContent=cur().name;q('#gRnd').textContent=`RND ${G.round}`;}
+  clearInterval(RNP.timerHandle);
+  RNP.votes={};RNP.myVote=null;RNP.tgGuesses={};RNP.bets=[];RNP.guessedTargets=new Set();
+  RNP.historyLog=[];RNP.totalRevealed=false;
+  RNP.myIdx=G.turn%G.players.length;
+  G.players.forEach((_,i)=>{RNP.tgGuesses[i]=null;});
+  q('#rnpPhase1').style.display='';q('#rnpPhase2').style.display='none';
+  const qt=RNP.qs[RNP.qIdx%RNP.qs.length];
+  q('#rnpQText').textContent=qt;q('#rnpQNum').textContent=`第 ${RNP.qIdx+1} 题 / 共 ${RNP.qs.length} 题`;
+  q('#rnpMyLbl').textContent=`${G.players[RNP.myIdx].name}，你的选择：`;
+  q('#rnpBtnR').className='rnp-vbtn red';q('#rnpBtnB').className='rnp-vbtn blk';
+  q('#rnpMyVoteArea').style.display='';q('#rnpVotedMsg').style.display='none';
+  q('#rnpEndBtn').style.display='';q('#btnDraw').style.display='none';q('#btnNext').style.display='none';
+  rnpRenderChips1();
+  RNP.timerSecs=30;
+  q('#rnpTimerFill').style.transition='none';q('#rnpTimerFill').style.width='100%';
+  q('#rnpTimerLbl').textContent='30s';
+  setTimeout(()=>{q('#rnpTimerFill').style.transition='width 30s linear';q('#rnpTimerFill').style.width='0%';},50);
+  RNP.timerHandle=setInterval(()=>{
+    RNP.timerSecs--;q('#rnpTimerLbl').textContent=RNP.timerSecs+'s';
+    if(RNP.timerSecs<=0){clearInterval(RNP.timerHandle);q('#rnpTimerLbl').textContent='⏰ 时间到';}
+  },1000);
+  RNP.qIdx++;
+  feedAdd('rnp',`红黑牌题：${qt}`,'🃏');
+}
+
+function rnpRenderChips1(){
+  const total=G.players.length,voted=Object.keys(RNP.votes).length;
+  q('#rnpVotedCnt').textContent=`${voted} / ${total} 已出牌`;
+  q('#rnpChips1').innerHTML=G.players.map((p,i)=>{
+    const v=RNP.votes[i];
+    let cls='rnp-chip pend';let icon='…';
+    if(v){cls='rnp-chip '+(v==='red'?'rv':'bv');icon=i===RNP.myIdx?(v==='red'?'🟥':'⬛'):'✓';}
+    return `<div class="${cls}">${p.av} ${p.name} ${icon}</div>`;}).join('');
+}
+
+function castVote(color){
+  if(RNP.myVote)return;RNP.myVote=color;RNP.votes[RNP.myIdx]=color;
+  q('#rnpBtnR').className='rnp-vbtn red confirmed'+(color==='red'?' chosen':'');
+  q('#rnpBtnB').className='rnp-vbtn blk confirmed'+(color==='black'?' chosen':'');
+  q('#rnpMyVoteArea').style.display='none';
+  q('#rnpVotedMsg').style.display='';
+  q('#rnpVotedMsg').textContent=`✓ 锁定 ${color==='red'?'🟥 红牌':'⬛ 黑牌'} // 等待全员`;
+  rnpRenderChips1();
+  // Simulate other players (1-3s delay each)
+  G.players.forEach((_,i)=>{if(i===RNP.myIdx)return;
+    setTimeout(()=>{if(!RNP.votes[i]){RNP.votes[i]=Math.random()<0.4?'red':'black';rnpRenderChips1();}},800+Math.random()*2200);});
+}
+
+function rnpEndVoting(){
+  clearInterval(RNP.timerHandle);
+  G.players.forEach((_,i)=>{if(!RNP.votes[i])RNP.votes[i]=Math.random()<0.4?'red':'black';});
+  rnpRenderChips1();rnpGoPhase2();
+}
+
+function rnpGoPhase2(){
+  q('#rnpPhase1').style.display='none';q('#rnpPhase2').style.display='';
+  q('#rnpQEcho').textContent=RNP.qs[(RNP.qIdx-1)%RNP.qs.length];
+  // Build total guess grid
+  q('#rnpTgGrid').innerHTML=G.players.map((p,i)=>`
+    <div class="rnp-tg-cell">
+      <span class="tg-av">${p.av}</span>
+      <span class="tg-nm">${p.name.slice(0,4)}</span>
+      <div class="tg-adj"><button class="tg-btn" onclick="adjTg(${i},-1)">－</button>
+        <span class="tg-num" id="tg${i}">？</span>
+        <button class="tg-btn" onclick="adjTg(${i},1)">＋</button></div>
+      <span class="tg-sub">张红牌</span>
+    </div>`).join('');
+  q('#rnpRevealTotalBtn').style.display='';q('#rnpRevealBox').style.display='none';
+  q('#rnpBetSection').style.display='none';q('#rnpHistorySection').style.display='none';
+  q('#rnpBetResults') && (q('#rnpBetResults').style&&(q('#rnpBetResults').style.display='none'));
+  RNP.totalRevealed=false;
+}
+
+function adjTg(pidx,delta){
+  const cur=RNP.tgGuesses[pidx],n=G.players.length;
+  RNP.tgGuesses[pidx]=Math.max(0,Math.min(n,(cur===null?0:cur)+delta));
+  q(`#tg${pidx}`).textContent=RNP.tgGuesses[pidx];
+}
+
+function rnpRevealTotal(){
+  RNP.totalRevealed=true;
+  const actual=Object.values(RNP.votes).filter(v=>v==='red').length;
+  // Show voter chips with real colours
+  q('#rnpVoterReveal').innerHTML=G.players.map((p,i)=>{
+    const v=RNP.votes[i],cls=v==='red'?'r':'b',icon=v==='red'?'🟥':'⬛';
+    return `<div class="rnp-chip-result ${cls}">${p.av} ${p.name} ${icon}</div>`;}).join('');
+  q('#rnpTotalBig').textContent=actual+' 张 🟥';
+  // Find worst guesser
+  let worstDiff=-1,worstP=[];
+  G.players.forEach((p,i)=>{const g=RNP.tgGuesses[i];if(g===null)return;const d=Math.abs(g-actual);if(d>worstDiff){worstDiff=d;worstP=[p];}else if(d===worstDiff)worstP.push(p);});
+  const penaltyTxt=worstP.length&&worstDiff>0?`💀 ${worstP.map(p=>p.name).join('、')} 偏差最大，喝酒！`:'🎉 全员猜得不错！';
+  q('#rnpPenaltyLine').textContent=penaltyTxt;
+  q('#rnpRevealBox').style.display='';q('#rnpRevealTotalBtn').style.display='none';
+  worstP.forEach(p=>p.drinks=(p.drinks||0)+1);
+  feedAdd('rnp',`红牌总数：${actual}张。${penaltyTxt}`,'🟥');
+  // Show betting section
+  q('#rnpBetSection').style.display='';
+  // target grid built when bet page opens
+}
+
+/* ════════════════════════════════════
+   🃏 BET PAGE — full-screen multi-state P2P flow
+   States: pick → stake → waiting → incoming → guess → reveal
+════════════════════════════════════ */
+const BP={
+  // Current active bet being negotiated
+  pendingBet:null,   // {id,fromIdx,targetIdx,stake,finalStake,status,guess}
+  betIdCtr:0,
+  // Stake adjust state
+  bpStake:1,
+  bpCounter:1,
+};
+
+function stakeIcons(n,maxShow=10){
+  const full=Math.min(n,maxShow),icons=Array(full).fill('🍺').join(' ');
+  return `<span style="font-size:1.4rem;letter-spacing:0.1em">${icons}</span>${n>maxShow?`<span style="font-size:0.75rem;color:var(--ng);margin-left:0.3rem">×${n}</span>`:''}`;
+}
+
+function openBetPage(){
+  const el=q('#betPage');el.style.display='flex';
+  q('#bpQLabel').textContent=RNP.qs[(RNP.qIdx-1)%RNP.qs.length];
+  q('#bpRound').textContent=`RND ${G.round}`;
+  bpRebuildTargetGrid();
+  bpShowState('pick');
+  bpSyncHistory();
+}
+function closeBetPage(){
+  q('#betPage').style.display='none';
+  // Update history on main phase2 page
+  bpSyncHistory();
+  // Check if all targets used up
+  const avail=G.players.filter((_,i)=>!RNP.guessedTargets.has(i)&&i!==RNP.myIdx).length;
+  q('#rnpOpenBetBtn').textContent=avail>0?'🃏 继续买卖':'🃏 买卖已全部完成';
+  q('#rnpOpenBetBtn').style.opacity=avail>0?'1':'0.5';
+}
+function bpShowState(name){
+  ['pick','stake','waiting','incoming','guess'].forEach(s=>{
+    q(`#bpState${s.charAt(0).toUpperCase()+s.slice(1)}`).style.display=name===s?'':'none';
+  });
+  updateBpRemaining();
+}
+function updateBpRemaining(){
+  const avail=G.players.filter((_,i)=>!RNP.guessedTargets.has(i)&&i!==RNP.myIdx).length;
+  q('#bpRemaining').textContent=`可猜 ${avail} 人`;
+}
+
+// ── PICK state ──
+function bpRebuildTargetGrid(){
+  const me=RNP.myIdx,grid=q('#bpTargetGrid');grid.innerHTML='';
+  G.players.forEach((p,i)=>{
+    const used=RNP.guessedTargets.has(i)||i===me;
+    const d=document.createElement('div');
+    d.style.cssText='display:flex;flex-direction:column;align-items:center;gap:0.3rem;padding:0.8rem 0.9rem;border-radius:12px;min-width:72px;cursor:'+(used?'default':'pointer')+';background:rgba('+(used?'255,255,255,0.01':'123,47,255,0.08')+');border:2px solid rgba('+(used?'255,255,255,0.06':'123,47,255,0.25')+');opacity:'+(used?0.3:1)+';transition:all 0.2s;';
+    if(!used){d.onmouseover=()=>{d.style.background='rgba(123,47,255,0.2)';d.style.borderColor='rgba(0,255,204,0.5)';};d.onmouseout=()=>{d.style.background='rgba(123,47,255,0.08)';d.style.borderColor='rgba(123,47,255,0.25)';};d.onclick=()=>bpSelectTarget(i);}
+    const avEl=document.createElement('span');avEl.style.fontSize='2rem';avEl.textContent=p.av;d.appendChild(avEl);
+    const nmEl=document.createElement('span');nmEl.style.cssText='font-family:Orbitron,sans-serif;font-size:0.75rem;color:'+(used?'var(--muted)':'var(--nc)')+';';nmEl.textContent=p.name;d.appendChild(nmEl);
+    if(used){const s=document.createElement('span');s.style.cssText='font-size:0.58rem;color:var(--muted);';s.textContent='已猜过';d.appendChild(s);}
+    else if(i===me){const s=document.createElement('span');s.style.cssText='font-size:0.58rem;color:var(--muted);';s.textContent='(我)';d.appendChild(s);}
+    grid.appendChild(d);
+  });
+}
+
+function bpSelectTarget(idx){
+  const from=G.players[RNP.myIdx],target=G.players[idx];
+  BP.pendingBet={id:++BP.betIdCtr,fromIdx:RNP.myIdx,targetIdx:idx,stake:1,finalStake:null,status:'drafting',guess:null};
+  BP.bpStake=1;
+  q('#bpFromAv').textContent=from.av;q('#bpFromName').textContent=from.name;
+  q('#bpTargetAv').textContent=target.av;q('#bpTargetName').textContent=target.name;
+  bpRenderStakeIcons('bpStakeIcons',BP.bpStake);
+  q('#bpStakeNum').textContent=BP.bpStake;
+  bpShowState('stake');
+}
+function adjBpStake(d){BP.bpStake=Math.max(1,Math.min(10,BP.bpStake+d));q('#bpStakeNum').textContent=BP.bpStake;bpRenderStakeIcons('bpStakeIcons',BP.bpStake);}
+function bpRenderStakeIcons(elId,n){
+  const el=q('#'+elId);if(!el)return;
+  el.innerHTML=Array.from({length:Math.min(n,10)},()=>`<span style="font-size:1.6rem">🍺</span>`).join('')+(n>10?`<span style="font-size:0.8rem;color:var(--ng);margin-left:0.3rem">×${n}</span>`:'');
+}
+
+function sendBetOffer(){
+  if(!BP.pendingBet)return;
+  BP.pendingBet.stake=BP.bpStake;BP.pendingBet.status='pending';
+  const from=G.players[BP.pendingBet.fromIdx],target=G.players[BP.pendingBet.targetIdx];
+  // Show waiting state for initiator
+  q('#bpWaitMsg').textContent=`等待 ${target.av} ${target.name} 回应…`;
+  q('#bpWaitDetail').innerHTML=`${from.av} <b>${from.name}</b> 向 ${target.av} <b>${target.name}</b> 发起买卖<br>
+    赌注：<b style="color:var(--ng)">${BP.bpStake} 🍺</b> — 猜对对方喝，猜错你喝`;
+  bpShowState('waiting');
+  // Simulate: other player sees it after 1.2s
+  setTimeout(()=>bpSimulateIncoming(BP.pendingBet),1200);
+}
+function cancelBetOffer(){
+  if(BP.pendingBet)BP.pendingBet.status='cancelled';
+  BP.pendingBet=null;bpShowState('pick');bpRebuildTargetGrid();
+}
+
+function bpSimulateIncoming(bet){
+  // In a real app this would arrive on the target's device
+  // Here the same phone is passed to the target player
+  if(!bet||bet.status!=='pending')return;
+  const from=G.players[bet.fromIdx],target=G.players[bet.targetIdx];
+  q('#bpIncFromAv').textContent=from.av;q('#bpIncFromName').textContent=from.name;
+  BP.bpCounter=bet.stake; // default: match initiator's offer
+  bpRenderStakeIcons('bpIncStakeIcons',bet.stake);
+  bpRenderStakeIcons('bpCounterIcons',BP.bpCounter);
+  q('#bpCounterNum').textContent=BP.bpCounter;
+  bpShowState('incoming');
+}
+function adjBpCounter(d){BP.bpCounter=Math.max(1,Math.min(10,BP.bpCounter+d));q('#bpCounterNum').textContent=BP.bpCounter;bpRenderStakeIcons('bpCounterIcons',BP.bpCounter);}
+
+function acceptBpOffer(){
+  if(!BP.pendingBet)return;
+  BP.pendingBet.finalStake=BP.bpCounter;BP.pendingBet.status='accepted';
+  const from=G.players[BP.pendingBet.fromIdx],target=G.players[BP.pendingBet.targetIdx];
+  // Show guess UI to initiator
+  q('#bpGuessTargetAv').textContent=target.av;q('#bpGuessTargetName').textContent=target.name;
+  q('#bpGuessStakeLine').innerHTML=`赌注：<b style="color:var(--ng)">${BP.pendingBet.finalStake} 🍺</b> — 猜对 ${target.name} 喝，猜错你喝`;
+  toast(`${target.name} 接受了！现在猜颜色`);
+  bpShowState('guess');
+}
+function declineBpOffer(){
+  if(BP.pendingBet){BP.pendingBet.status='declined';BP.pendingBet=null;}
+  toast('已拒绝这次买卖');bpShowState('pick');bpRebuildTargetGrid();
+}
+
+function submitGuess(color){
+  if(!BP.pendingBet||BP.pendingBet.status!=='accepted')return;
+  BP.pendingBet.guess=color;BP.pendingBet.status='guessed';
+  const bet=BP.pendingBet;
+  const actual=RNP.votes[bet.targetIdx];
+  const correct=color===actual;
+  const from=G.players[bet.fromIdx],target=G.players[bet.targetIdx];
+  const stake=bet.finalStake||bet.stake;
+  const loser=correct?target:from;loser.drinks=(loser.drinks||0)+stake;
+  bet.result={correct,loser:loser.name,actual};
+  RNP.guessedTargets.add(bet.targetIdx);
+  RNP.historyLog.push({from,target,correct,stake,actual,guess:color});
+  feedAdd('rnp',`${from.name}猜${target.name}=${color==='red'?'🟥':'⬛'}，${correct?'猜对':'猜错'}，${loser.name}喝${stake}口`,'🃏');
+  // Show reveal modal
+  showBetReveal(bet,from,target,actual,color,correct,stake);
+}
+function chickOutGuess(){
+  if(!BP.pendingBet)return;
+  const from=G.players[BP.pendingBet.fromIdx];
+  const stake=BP.pendingBet.finalStake||BP.pendingBet.stake;
+  from.drinks=(from.drinks||0)+stake;
+  BP.pendingBet.status='forfeited';
+  toast(`放弃猜测，${from.name} 喝 ${stake} 🍺`);
+  RNP.historyLog.push({from,target:G.players[BP.pendingBet.targetIdx],correct:false,stake,actual:'?',guess:'forfeit',forfeited:true});
+  RNP.guessedTargets.add(BP.pendingBet.targetIdx);
+  BP.pendingBet=null;bpShowState('pick');bpRebuildTargetGrid();bpSyncHistory();checkBpAllDone();
+}
+
+function showBetReveal(bet,from,target,actual,guess,correct,stake){
+  q('#brmFromAv').textContent=from.av;q('#brmFromName').textContent=from.name;
+  q('#brmTargetAv').textContent=target.av;q('#brmTargetName').textContent=target.name;
+  // Guess card
+  const gEl=q('#brmGuessCard');
+  gEl.style.background=guess==='red'?'rgba(200,0,30,0.18)':'rgba(200,200,200,0.06)';
+  gEl.style.borderColor=guess==='red'?'rgba(255,60,60,0.55)':'rgba(180,180,180,0.35)';
+  gEl.textContent=guess==='red'?'🟥':'⬛';
+  // Actual card
+  const aEl=q('#brmActualCard');
+  aEl.style.background=actual==='red'?'rgba(200,0,30,0.22)':'rgba(200,200,200,0.07)';
+  aEl.style.borderColor=actual==='red'?'rgba(255,60,60,0.7)':'rgba(180,180,180,0.45)';
+  aEl.textContent=actual==='red'?'🟥':'⬛';
+  aEl.style.animation='revealBurst 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+  const loser=correct?target:from;
+  q('#brmVerdict').textContent=correct?'猜对了！✅':'猜错了！❌';
+  q('#brmVerdict').style.color=correct?'#00dc50':'var(--np)';
+  q('#brmDrink').innerHTML=`<b style="color:var(--np)">${loser.av} ${loser.name}</b><br>喝 ${stake} 🍺`;
+  q('#betRevealModal').style.display='flex';
+  setTimeout(()=>q('#betRevealModal').style.animation='blastIn 0.35s ease',10);
+}
+function closeBetReveal(){
+  q('#betRevealModal').style.display='none';BP.pendingBet=null;
+  bpSyncHistory();bpShowState('pick');bpRebuildTargetGrid();checkBpAllDone();
+}
+
+function bpSyncHistory(){
+  const hist=q('#rnpHistoryList');const histBp=q('#bpHistoryList');
+  const rows=RNP.historyLog.map(h=>{
+    if(h.forfeited)return `<div class="rnp-hist-row lose">🐔 <b>${h.from.name}</b> 放弃猜 <b>${h.target.name}</b> — ${h.from.name}喝${h.stake}🍺</div>`;
+    const cls=h.correct?'win':'lose',icon=h.correct?'✅':'❌';
+    return `<div class="rnp-hist-row ${cls}">${icon} <b>${h.from.name}</b> 猜 <b>${h.target.name}</b> ${h.actual==='red'?'🟥':'⬛'} — ${h.correct?h.target.name:h.from.name}喝${h.stake}🍺</div>`;}).join('');
+  if(hist){hist.innerHTML=rows;q('#rnpHistorySection').style.display=RNP.historyLog.length?'':'';}
+  if(histBp){histBp.innerHTML=rows;q('#bpHistoryWrap').style.display=RNP.historyLog.length?'':'none';}
+}
+
+function checkBpAllDone(){
+  const avail=G.players.filter((_,i)=>!RNP.guessedTargets.has(i)&&i!==RNP.myIdx).length;
+  if(avail===0){
+    q('#bpAllDoneBar').style.display='';q('#bpHistoryWrap').style.display='';bpSyncHistory();
+  }
+}
+
+function rnpDoneBetting(){
+  // Close bet page if open
+  q('#betPage').style.display='none';
+  bpSyncHistory();
+  rnpNextRound();
+}
+
+/* ════════════════════════════════════
+   ORACLE API
+════════════════════════════════════ */
+async function oracle(prompt){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
+  });
+  const d=await res.json();const txt=d.content.map(b=>b.text||'').join('');
+  if(txt.trim().startsWith('{'))return JSON.parse(txt.replace(/```json|```/g,'').trim());
+  return{content:txt};
+}
+
+/* ════════════════════════════════════
+   OFFLINE ANCHOR
+════════════════════════════════════ */
+let _oaTimer=null;
+function showOfflineAnchor(icon,title,instruct,hint,secs){
+  q('#oaIcon').textContent=icon;q('#oaTitle').textContent=title;
+  q('#oaInstruct').textContent=instruct;q('#oaHint').textContent=hint;
+  const tw=q('#oaTimerWrap');
+  if(secs>0){tw.style.display='';let s=secs;q('#oaTimer').textContent=s;clearInterval(_oaTimer);
+    _oaTimer=setInterval(()=>{s--;q('#oaTimer').textContent=s;if(s<=0){clearInterval(_oaTimer);q('#oaTimer').textContent='⏰';}},1000);
+  }else tw.style.display='none';
+  q('#oaOverlay').classList.add('show');
+}
+function markDone(){clearInterval(_oaTimer);const p=cur();p.done=(p.done||0)+1;q('#oaOverlay').classList.remove('show');feedAdd('sys',`✅ ${p.name} 完成！`,'✅');q('#btnNext').style.display='';}
+function markChicken(){clearInterval(_oaTimer);const p=cur();p.chickens=(p.chickens||0)+1;q('#oaOverlay').classList.remove('show');feedAdd('sys',`🐔 ${p.name} 认怂！喝两杯`,'🐔');toast(`${p.name} 认怂，喝两杯 🐔`);q('#btnNext').style.display='';}
+
+/* ════════════════════════════════════
+   YOUR TURN BLAST
+════════════════════════════════════ */
+function showBlast(p){q('#ytAv').textContent=p.av;q('#ytName').textContent=p.name;if(q('#ytLblEl'))q('#ytLblEl').textContent=t('ytLbl');q('#ytBlast').style.display='flex';if(navigator.vibrate)navigator.vibrate([80,40,180]);}
+function dismissBlast(){q('#ytBlast').style.display='none';}
+
+/* ════════════════════════════════════
+   REACTIONS
+════════════════════════════════════ */
+const RXNS=['😂','🔥','💀','❤️‍🔥','🫣','🍺'];const rcnts=[0,0,0,0,0,0];
+function react(e){
+  const i=RXNS.indexOf(e);if(i>=0){rcnts[i]++;const el=q(`#rc${i}`);if(el){el.textContent=rcnts[i];el.classList.add('show');}}
+  const fl=document.createElement('div');fl.className='emoji-float';fl.textContent=e;
+  fl.style.left=`${15+Math.random()*70}%`;fl.style.bottom='130px';document.body.appendChild(fl);setTimeout(()=>fl.remove(),1900);
+  if(['🔥','❤️‍🔥','🍺'].includes(e))feedAdd('sys',`全场反应了 ${e}`,e);
+}
+function resetRxn(){rcnts.fill(0);for(let i=0;i<6;i++){const el=q(`#rc${i}`);if(el){el.textContent='';el.classList.remove('show');}}}
+
+/* ════════════════════════════════════
+   FEED
+════════════════════════════════════ */
+const FEED=[];
+function feedAdd(type,text,icon){
+  const now=new Date(),time=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  FEED.unshift({type,text,icon:icon||'✦',time});if(FEED.length>50)FEED.pop();renderFeed();
+}
+function renderFeed(){const el=q('#feedScroll');if(!el)return;
+  el.innerHTML=FEED.map(f=>`<div class="feed-item ${f.type}"><span style="flex-shrink:0">${f.icon}</span><span style="flex:1">${f.text}</span><span class="feed-time">${f.time}</span></div>`).join('');}
+function clearFeed(){FEED.length=0;renderFeed();}
+function showFeedRxn(){q('#feedSection').style.display='';q('#rxnBar').style.display='';}
+
+/* ════════════════════════════════════
+   SCOREBOARD
+════════════════════════════════════ */
+function showBoard(){
+  const rows=[...G.players].map(p=>({p,score:(p.done||0)*3+(p.turns||0)-((p.chickens||0)*2)})).sort((a,b)=>b.score-a.score);
+  q('#boardList').innerHTML=rows.map((r,i)=>`
+    <div class="board-row">
+      <div class="b-rank">${['🥇','🥈','🥉'][i]||i+1}</div>
+      <div style="font-size:1.3rem">${r.p.av}</div>
+      <div style="flex:1;font-size:0.92rem">${r.p.name}${r.p.chickens>0?`<span style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);margin-left:0.3rem">🐔×${r.p.chickens}</span>`:''}</div>
+      <div class="b-stats"><div>完成 <span class="b-sv">${r.p.done||0}</span></div><div>喝酒 <span class="b-sv">${r.p.drinks||0}</span></div></div>
+    </div>`).join('');
+  q('#boardOverlay').classList.add('show');
+}
+function hideBoard(){q('#boardOverlay').classList.remove('show');}
+
+/* ════════════════════════════════════
+   HELPERS
+════════════════════════════════════ */
+function show(id){qa('.screen').forEach(s=>s.classList.remove('active'));q('#'+id).classList.add('active');setTimeout(applyI18n,0);}
+function setLoad(on){q('#loader').classList.toggle('on',on);}
+function toast(msg){qa('.toast').forEach(t=>t.remove());const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function q(s){return document.querySelector(s);}
+function qa(s){return document.querySelectorAll(s);}
+
+/* ════════════════════════════════════
+   INIT — build avatar grid on load
+════════════════════════════════════ */
+
+/* ════════════════════════════════════
+   🌐 i18n
+════════════════════════════════════ */
+let LANG='zh';
+const T={
+  // Auth
+  appSub:{zh:'AI DM LOADED · 成人派对',en:'AI DM LOADED · ADULTS ONLY'},
+  tabLogin:{zh:'登 录',en:'LOGIN'},
+  tabReg:{zh:'注 册',en:'REGISTER'},
+  fPhone:{zh:'手机号 / 昵称',en:'Phone / Nickname'},
+  fPass:{zh:'密码',en:'Password'},
+  btnLogin:{zh:'[ 登 录 ]',en:'[ LOG IN ]'},
+  btnGuest:{zh:'游客快速进入',en:'Quick Guest Entry'},
+  fName:{zh:'昵称',en:'Nickname'},
+  fPhoneReg:{zh:'手机号',en:'Phone number'},
+  fPassReg:{zh:'设置密码',en:'Set password'},
+  fGender:{zh:'性别',en:'Gender'},
+  gMale:{zh:'♂ 男',en:'♂ Male'},
+  gFemale:{zh:'♀ 女',en:'♀ Female'},
+  gOther:{zh:'✦ 不透露',en:'✦ Other'},
+  fAvatar:{zh:'选择头像',en:'Choose Avatar'},
+  btnRegister:{zh:'[ 注 册 并 登 录 ]',en:'[ REGISTER & LOGIN ]'},
+  // Room select
+  btnCreate:{zh:'＋ 创建房间',en:'＋ Create Room'},
+  btnJoin:{zh:'加入房间',en:'Join Room'},
+  lblPublic:{zh:'公开房间',en:'Public Rooms'},
+  lblMyRooms:{zh:'我的最近房间',en:'Recent Rooms'},
+  noPublic:{zh:'暂无公开房间',en:'No public rooms yet'},
+  btnLogout:{zh:'退出',en:'Logout'},
+  // Create modal
+  crTitle:{zh:'// 创建新房间',en:'// Create Room'},
+  crNamePh:{zh:'今晚的局',en:"Tonight's game"},
+  crPublicLbl:{zh:'公开房间（所有人可见）',en:'Public room (visible to all)'},
+  crPassPh:{zh:'留空则无密码',en:'Leave blank for no password'},
+  crPassLbl:{zh:'房间密码（可选）',en:'Password (optional)'},
+  btnCreate2:{zh:'创 建',en:'Create'},
+  btnCancel:{zh:'取消',en:'Cancel'},
+  // Join modal
+  jTitle:{zh:'// 加入房间',en:'// Join Room'},
+  jCodePh:{zh:'6位房间码',en:'6-digit room code'},
+  jPassPh:{zh:'公开房间留空',en:'Leave blank if public'},
+  btnJoin2:{zh:'加 入',en:'Join'},
+  // Lobby
+  lobCopy:{zh:'复制房间码分享给朋友',en:'Copy room code to share'},
+  lblPlayers:{zh:'在场玩家',en:'Players'},
+  lblGames:{zh:'选择游戏',en:'Choose Game'},
+  btnStart:{zh:'▶ START GAME',en:'▶ START GAME'},
+  btnAddP:{zh:'＋加人',en:'＋ Add Bot'},
+  btnBack:{zh:'← 返回',en:'← Back'},
+  // Game tiles
+  g_kings:{zh:'国王令',en:"King's Game"},
+  g_rnp:{zh:'红黑牌',en:'Red/Black'},
+  g_tod:{zh:'真心话',en:'T or D'},
+  g_nhie:{zh:'从来没有',en:'Never Have I'},
+  g_wyr:{zh:'二选一',en:'Would You Rather'},
+  g_liar:{zh:'骰盅大话',en:"Liar's Dice"},
+  g_fist:{zh:'划 拳',en:'Fist'},
+  g_ktv:{zh:'KTV罚',en:'KTV Dare'},
+  // Game labels
+  gLabel_kings:{zh:'👑 国王令',en:"👑 King's Game"},
+  gLabel_rnp:{zh:'🃏 红黑牌',en:'🃏 Red/Black'},
+  gLabel_tod:{zh:'🎭 真心话大冒险',en:'🎭 Truth or Dare'},
+  gLabel_nhie:{zh:'🥂 我从来没有',en:'🥂 Never Have I Ever'},
+  gLabel_wyr:{zh:'🆚 二选一',en:'🆚 Would You Rather'},
+  gLabel_liar:{zh:'🎲 骰盅大话',en:"🎲 Liar's Dice"},
+  gLabel_fist:{zh:'✊ 划拳',en:'✊ Rock Paper Scissors'},
+  gLabel_ktv:{zh:'🎤 KTV罚唱',en:'🎤 KTV Dare'},
+  // Turn bar
+  turnLbl:{zh:'// 你的回合',en:'// YOUR TURN'},
+  // Draw / next buttons
+  btnDraw:{zh:'▶ 抽题',en:'▶ DRAW'},
+  btnNext:{zh:'NEXT →',en:'NEXT →'},
+  btnExit:{zh:'EXIT',en:'EXIT'},
+  // TOD
+  todTruth:{zh:'真心话',en:'TRUTH'},
+  todDare:{zh:'大冒险',en:'DARE'},
+  // NHIE
+  nhieBadge:{zh:'FROM NEVER',en:'FROM NEVER'},
+  // WYR
+  wyrOr:{zh:'还是',en:'OR'},
+  // Fist
+  fistTitle:{zh:'✊ 划拳对决',en:'✊ Rock Showdown'},
+  fStep1:{zh:'选对手',en:'Pick Foe'},
+  fStep2:{zh:'出拳',en:'Throw'},
+  fStep3:{zh:'揭晓',en:'Reveal'},
+  fChallTitle:{zh:'选择对手',en:'Choose Opponent'},
+  fChallSub:{zh:'谁来接受',en:"Who'll face"},
+  fRock:{zh:'石头',en:'Rock'},
+  fPaper:{zh:'布',en:'Paper'},
+  fScissors:{zh:'剪刀',en:'Scissors'},
+  fCallLbl:{zh:'喊：',en:'Call:'},
+  fConfirm1:{zh:'已选好 →',en:'Locked →'},
+  fConfirm2:{zh:'确认出拳',en:'Confirm'},
+  fRematch:{zh:'🔄 再来一局',en:'🔄 Rematch'},
+  fHint:{zh:'✊石头 > ✌️剪刀 > ✋布',en:'✊Rock > ✌️Scissors > ✋Paper'},
+  // KTV
+  ktvTitle:{zh:'KTV 罚唱',en:'KTV Dare'},
+  // RNP
+  rnpPh1Lbl:{zh:'// 红黑牌题目',en:'// Question'},
+  rnpVoteBtnR:{zh:'红牌',en:'RED'},
+  rnpVoteSubR:{zh:'做过 / 符合',en:'Done it / Applies'},
+  rnpVoteBtnB:{zh:'黑牌',en:'BLACK'},
+  rnpVoteSubB:{zh:'没做过 / 不符合',en:"Haven't / Doesn't"},
+  rnpLocked:{zh:'全员出牌 → 进入猜牌阶段',en:'All voted → Reveal phase'},
+  rnpRevealTotal:{zh:'🔓 揭晓红牌总数',en:'🔓 Reveal Red Count'},
+  rnpSec1:{zh:'① 猜场上几张红牌？',en:'① How many RED cards?'},
+  rnpSec2:{zh:'② 个人买卖',en:'② P2P Bets'},
+  rnpSec2sub:{zh:'发起买卖 → 对方出价接受 → 你猜颜色 → 双方弹窗结算',en:'Offer → Target accepts → You guess → Both see result'},
+  rnpSec2hint:{zh:'被猜过的人结果只有双方知道 🤫',en:'Results only visible to both parties 🤫'},
+  rnpHistTitle:{zh:'猜牌记录 // 只有当事人知道结果',en:'Bet history // Private to both parties'},
+  rnpOpenBet:{zh:'🃏 进入买卖房间',en:'🃏 Enter Betting Room'},
+  rnpNoGuess:{zh:'我不猜了',en:'Skip betting'},
+  rnpTotalBigLbl:{zh:'张 🟥',en:'🟥 cards'},
+  // Bet page
+  bpTitle:{zh:'🃏 个人买卖',en:'🃏 P2P Bets'},
+  bpPickLbl:{zh:'// 选择你想猜的人',en:'// Pick your target'},
+  bpPickSub:{zh:'灰色 = 已被猜过，不可再选',en:'Grey = already bet on'},
+  bpNoGuess:{zh:'我不猜了 → 返回',en:"Pass → Back"},
+  bpStakeLbl:{zh:'// 向对方发起买卖',en:'// Make an offer'},
+  bpStakeDesc:{zh:'猜对 → 对方喝这么多 | 猜错 → 我喝这么多',en:'Guess right → they drink | Wrong → you drink'},
+  bpMyPriceLbl:{zh:'我愿意付出的赌注',en:'My stake'},
+  bpCups:{zh:'杯',en:'cups'},
+  bpSend:{zh:'📤 发起买卖',en:'📤 Send Offer'},
+  bpWaitTitle:{zh:'等待对方回应…',en:'Waiting for response…'},
+  bpWithdraw:{zh:'撤回买卖',en:'Withdraw Offer'},
+  bpIncomingLbl:{zh:'// 收到买卖邀约',en:'// Incoming Bet Offer'},
+  bpIncStakeLbl:{zh:'赌注出价',en:'Stake offered'},
+  bpIncConseq:{zh:'对方猜对 → 你喝这些 | 对方猜错 → 对方喝这些',en:'They guess right → you drink | Wrong → they drink'},
+  bpCounterLbl:{zh:'你可以修改赌注（不接受直接拒绝）',en:'Counter-offer (or just decline)'},
+  bpAccept:{zh:'✅ 接受',en:'✅ Accept'},
+  bpDecline:{zh:'拒绝',en:'Decline'},
+  bpGuessLbl:{zh:'// 对方接受了！现在猜颜色',en:'// Accepted! Now guess the color'},
+  bpGuessQ:{zh:'出的是？',en:'Their card?'},
+  bpGuessRed:{zh:'红牌',en:'RED'},
+  bpGuessRedSub:{zh:'做过 / 符合',en:'Done it / Applies'},
+  bpGuessBlk:{zh:'黑牌',en:'BLACK'},
+  bpGuessBlkSub:{zh:'没做过 / 不符合',en:"Haven't / Doesn't"},
+  bpChicken:{zh:'🐔 放弃这次猜测（算我输）',en:'🐔 Forfeit (I lose)'},
+  bpHistTitle:{zh:'猜牌记录 // 只有当事人知道',en:'Bet log // Private'},
+  bpAllDoneLbl:{zh:'// 无人可猜，进入下一题',en:'// No more targets → next question'},
+  bpNextQ:{zh:'→ 下一题',en:'→ Next Question'},
+  // Bet reveal
+  brmTitle:{zh:'// 买卖结算',en:'// Bet Result'},
+  brmGuesser:{zh:'猜测者',en:'Guesser'},
+  brmTarget:{zh:'被猜者',en:'Target'},
+  brmGuessLbl:{zh:'猜测',en:'Guess'},
+  brmActualLbl:{zh:'实际',en:'Actual'},
+  brmRight:{zh:'猜对了！✅',en:'Correct! ✅'},
+  brmWrong:{zh:'猜错了！❌',en:'Wrong! ❌'},
+  brmContinue:{zh:'继续猜',en:'Continue'},
+  // Offline anchor
+  oaDone:{zh:'✅ 完成',en:'✅ Done'},
+  oaChicken:{zh:'🐔 认怂',en:'🐔 Chicken'},
+  // Scoreboard
+  boardTitle:{zh:'SCOREBOARD',en:'SCOREBOARD'},
+  boardSub:{zh:'WINNERS · LOSERS · LEGENDS',en:'WINNERS · LOSERS · LEGENDS'},
+  boardClose:{zh:'CLOSE',en:'CLOSE'},
+  boardDone:{zh:'完成',en:'Done'},
+  boardDrink:{zh:'喝酒',en:'Drank'},
+  // Toast messages
+  tSelectGame:{zh:'先选游戏',en:'Pick a game first'},
+  tMinPlayers:{zh:'至少需要2人',en:'Need at least 2 players'},
+  tInputPhone:{zh:'输入昵称',en:'Enter nickname'},
+  tInputPhone2:{zh:'输入手机号',en:'Enter phone number'},
+  tInputPass:{zh:'设置密码',en:'Set a password'},
+  tPickAvatar:{zh:'选择头像',en:'Pick an avatar'},
+  tWelcome:{zh:'欢迎，',en:'Welcome, '},
+  tWelcomeBack:{zh:'欢迎回来，',en:'Welcome back, '},
+  tNoAccount:{zh:'账号不存在，先注册',en:'No account found, please register'},
+  tWrongPass:{zh:'密码错误',en:'Wrong password'},
+  tCopied:{zh:'已复制 ',en:'Copied: '},
+  tMaxPlayers:{zh:'最多10人',en:'Max 10 players'},
+  tRoomNotFound:{zh:'房间不存在',en:'Room not found'},
+  tWrongRoomPass:{zh:'密码错误',en:'Wrong room password'},
+  // Your turn blast
+  ytLbl:{zh:'你的回合',en:'YOUR TURN'},
+  ytSub:{zh:'TAP TO CONTINUE_',en:'TAP TO CONTINUE_'},
+  // Feed
+  feedTitle:{zh:'📡 TONIGHT_LOG',en:'📡 TONIGHT_LOG'},
+  feedScore:{zh:'🏆 SCORE',en:'🏆 SCORE'},
+  feedClear:{zh:'CLR',en:'CLR'},
+  // Liar
+  liarTitle:{zh:'🎲 骰盅大话',en:"🎲 Liar's Dice"},
+  liarRules:{zh:'每人摇5颗，只看自己的，轮流喊「至少X个Y点」。不信？点<b style="color:var(--np)">开盖挑战</b>，输者喝酒。',en:'Roll 5 dice privately. Bid at least X of face Y. Doubt it? Challenge — loser drinks.'},
+  liarCurBid:{zh:'当前喊的',en:'Current Bid'},
+  liarDiceLabel:{zh:'点击摇骰子',en:'Click to roll'},
+  liarMyDiceLabel:{zh:'的骰子（只有你看得到）',en:"'s dice (only you can see)"},
+  liarQtyLbl:{zh:'数量',en:'Count'},
+  liarFaceLbl:{zh:'点数',en:'Face'},
+  liarConfirm:{zh:'✅ 喊出',en:'✅ Bid'},
+  liarChallenge:{zh:'😤 挑战',en:'😤 Challenge'},
+  liarRevealHd:{zh:'— 开盖结果 —',en:'— Reveal —'},
+  liarChallenge2:{zh:'开盖！',en:'Challenge!'},
+};
+function t(key){const e=T[key];if(!e)return key;return e[LANG]||e.zh||key;}
+function setLang(lang){
+  LANG=lang;
+  q('#lbZh').classList.toggle('on',lang==='zh');
+  q('#lbEn').classList.toggle('on',lang==='en');
+  applyI18n();
+}
+function applyI18n(){
+  // Auth screen
+  _applyText('#appSub', t('appSub'));
+  _applyText('#tabLogin', t('tabLogin'));
+  _applyText('#tabReg', t('tabReg'));
+  _applyPlaceholder('#lPhone', t('fPhone'));
+  _applyPlaceholder('#lPass', t('fPass'));
+  _applyText('#btnLoginBtn', t('btnLogin'));
+  _applyText('#btnGuestBtn', t('btnGuest'));
+  _applyPlaceholder('#rName', t('fName'));
+  _applyPlaceholder('#rPhone', t('fPhoneReg'));
+  _applyPlaceholder('#rPass', t('fPassReg'));
+  _applyText('#genderLbl', t('fGender'));
+  _applyText('#gMaleBtn', t('gMale'));
+  _applyText('#gFemBtn', t('gFemale'));
+  _applyText('#gOtherBtn', t('gOther'));
+  _applyText('#avLbl', t('fAvatar'));
+  _applyText('#btnRegBtn', t('btnRegister'));
+  // Room select
+  _applyText('#rsCreateBtn', t('btnCreate'));
+  _applyText('#rsJoinBtn', t('btnJoin'));
+  _applyText('#rsLogoutBtn', t('btnLogout'));
+  _applyText('#pubRoomsLbl', t('lblPublic'));
+  _applyText('#myRoomsLbl', t('lblMyRooms'));
+  // Create modal
+  _applyText('#crModalTitle', t('crTitle'));
+  _applyPlaceholder('#crName', t('crNamePh'));
+  _applyText('#crPublicLbl2', t('crPublicLbl'));
+  _applyText('#crPassLbl2', t('crPassLbl'));
+  _applyPlaceholder('#crPass', t('crPassPh'));
+  _applyText('#crCreateBtn', t('btnCreate2'));
+  _applyText('#crCancelBtn', t('btnCancel'));
+  // Join modal
+  _applyText('#jModalTitle', t('jTitle'));
+  _applyPlaceholder('#jCode', t('jCodePh'));
+  _applyPlaceholder('#jPass', t('jPassPh'));
+  _applyText('#jJoinBtn', t('btnJoin2'));
+  _applyText('#jCancelBtn', t('btnCancel'));
+  // Lobby
+  _applyText('#lobHint', LANG==='zh'?'房间码分享给朋友':'Share room code with friends');
+  _applyText('#lobPlayerLbl', t('lblPlayers'));
+  _applyText('#lobGameLbl', t('lblGames'));
+  _applyText('#btnStartGame', t('btnStart'));
+  _applyText('#btnAddDemo', t('btnAddP'));
+  _applyText('#btnLobBack', t('btnBack'));
+  // Game tiles
+  qa('[data-g]').forEach(el=>{const gn=el.querySelector('.gn');if(gn)gn.textContent=t('g_'+el.dataset.g)||gn.textContent;});
+  // Turn bar / act bar
+  _applyText('#tLbl', t('turnLbl'));
+  _applyText('#btnDraw', t('btnDraw'));
+  if(q('#btnNext').style.display!=='none')_applyText('#btnNext', t('btnNext'));
+  _applyText('#btnExitGame', t('btnExit'));
+  // Feed
+  _applyText('#feedTitleLbl', t('feedTitle'));
+  _applyText('#feedScoreBtn', t('feedScore'));
+  _applyText('#feedClearBtn', t('feedClear'));
+  // Your turn
+  _applyText('#ytLblEl', t('ytLbl'));
+  _applyText('#ytSub', t('ytSub'));
+  // Scoreboard
+  _applyText('#boardTtl', t('boardTitle'));
+  _applyText('#boardSub2', t('boardSub'));
+  _applyText('#boardCloseBtn', t('boardClose'));
+  // Loader
+  _applyText('#loaderTxt', LANG==='zh'?'AI 主持人 处理中...':'AI DM PROCESSING...');
+  // Offline anchor btns
+  _applyText('#oaDoneBtn', t('oaDone'));
+  _applyText('#oaChickenBtn', t('oaChicken'));
+  // Game mode label
+  if(G.game){const labels={kings:t('gLabel_kings'),rnp:t('gLabel_rnp'),tod:t('gLabel_tod'),nhie:t('gLabel_nhie'),wyr:t('gLabel_wyr'),liar:t('gLabel_liar'),fist:t('gLabel_fist'),ktv:t('gLabel_ktv')};const lbl=labels[G.game];if(lbl)_applyText('#gMode',lbl);}
+  // TOD
+  _applyText('#todTruthLbl', t('todTruth'));
+  _applyText('#todDareLbl', t('todDare'));
+  // WYR
+  _applyText('#wyrOrLbl', t('wyrOr'));
+  // Fist
+  _applyText('#fistTitleLbl', t('fistTitle'));
+  _applyText('#fStepLbl1', t('fStep1'));
+  _applyText('#fStepLbl2', t('fStep2'));
+  _applyText('#fStepLbl3', t('fStep3'));
+  // RNP Phase 1
+  _applyText('#rnpQLabel2', t('rnpPh1Lbl'));
+  _applyText('#rnpEndBtn', t('rnpLocked'));
+  _applyText('#rnpVoteBtnRLbl', t('rnpVoteBtnR'));
+  _applyText('#rnpVoteSubRLbl', t('rnpVoteSubR'));
+  _applyText('#rnpVoteBtnBLbl', t('rnpVoteBtnB'));
+  _applyText('#rnpVoteSubBLbl', t('rnpVoteSubB'));
+  // Bet page
+  _applyText('#bpTitleLbl', t('bpTitle'));
+  _applyText('#bpPickLbl2', t('bpPickLbl'));
+  _applyText('#bpPickSub2', t('bpPickSub'));
+  _applyText('#bpNoGuessBtn', t('bpNoGuess'));
+  // Bet reveal
+  _applyText('#brmTitleLbl', t('brmTitle'));
+  _applyText('#brmGuesserLbl', t('brmGuesser'));
+  _applyText('#brmTargetLbl', t('brmTarget'));
+  _applyText('#brmGuessLbl2', t('brmGuessLbl'));
+  _applyText('#brmActualLbl2', t('brmActualLbl'));
+  _applyText('#brmContinueBtn', t('brmContinue'));
+}
+function _applyText(sel,txt){const el=q(sel);if(el)el.textContent=txt;}
+function _applyPlaceholder(sel,txt){const el=q(sel);if(el)el.placeholder=txt;}
+
+
+buildAvGrid();
+applyI18n();
+</script>
+</body>
+</html>
